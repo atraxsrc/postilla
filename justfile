@@ -1,7 +1,7 @@
 # Name of the application's binary.
 name := 'cedilla'
 # The unique ID of the application.
-appid := 'dev.mariinkys.Cedilla'
+appid := 'dev.mariinkys.Cedilla.Fork'
 
 # Path to root file system, which defaults to `/`.
 rootdir := ''

@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Cedilla
+Name=Cedilla Fork
 Comment=A markdown text editor
 Comment[cs]=Editor textu Markdown
 Type=Application
-Icon=dev.mariinkys.Cedilla
+Icon=dev.mariinkys.Cedilla.Fork
 Exec=cedilla %F
 Terminal=false
 StartupNotify=true

@@ -49,7 +49,13 @@ mod update;
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 
 /// Unique identifier in RDNN (reverse domain name notation) format.
-pub const APP_ID: &str = "dev.mariinkys.Cedilla";
+///
+/// This fork uses its own id so it can be installed and run next to the
+/// upstream (Flathub) Cedilla: separate config, vault, themes folder,
+/// single-instance D-Bus name and launcher entry. Keep it in sync with the
+/// `appid` in the `justfile`, `resources/app.desktop`,
+/// `resources/app.metainfo.xml` and the Flatpak manifest.
+pub const APP_ID: &str = "dev.mariinkys.Cedilla.Fork";
 
 /// The application model stores app-specific state used to describe its interface and
 /// drive its logic.
@@ -210,6 +216,8 @@ pub enum Message {
     MoveNode(cosmic::widget::segmented_button::Entity, PathBuf),
     /// Ask to move the main vault to another path
     MoveVault,
+    /// Ask to use an existing folder as the vault (nothing is moved)
+    OpenVault,
     /// Callback after asking to move the vault
     VaultMoved(Result<PathBuf, anywho::Error>),
 
@@ -828,6 +836,7 @@ impl cosmic::Application for AppModel {
             Message::RenameNode(entity, name) => self.handle_rename_node(entity, name),
             Message::MoveNode(entity, path) => self.handle_move_node(entity, path),
             Message::MoveVault => self.handle_move_vault(),
+            Message::OpenVault => self.handle_open_vault(),
             Message::VaultMoved(result) => self.handle_vault_moved(result),
 
             // Editor
@@ -1119,6 +1128,16 @@ impl AppModel {
                                 .width(Length::Shrink)
                         ]
                         .align_y(Alignment::Center)
+                        .into(),
+                        row![
+                            button::standard(fl!("open-vault"))
+                                .leading_icon(icons::get_handle("folder-open-symbolic", 16))
+                                .on_press(Message::OpenVault),
+                            horizontal(),
+                            info_tooltip(fl!("open-vault-info")),
+                        ]
+                        .align_y(Alignment::Center)
+                        .spacing(spacing.space_xxs)
                         .into(),
                     ])
                     .spacing(spacing.space_xxs),

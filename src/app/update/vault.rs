@@ -173,6 +173,31 @@ impl AppModel {
         Task::none()
     }
 
+    /// Lets the user pick an existing folder and uses it as the vault, without
+    /// moving anything. Handy to point this fork at the notes of another
+    /// Cedilla installation (e.g. the Flatpak one).
+    pub fn handle_open_vault(&mut self) -> Task<cosmic::Action<Message>> {
+        let current_vault_path = self.config.vault_path.clone();
+
+        Task::perform(
+            async move { utils::files::open_folder_picker(current_vault_path).await },
+            |res| match res {
+                Some(path) => {
+                    let path = PathBuf::from(path);
+                    if path.is_dir() {
+                        cosmic::action::app(Message::VaultMoved(Ok(path)))
+                    } else {
+                        cosmic::action::app(Message::VaultMoved(Err(anywho::anywho!(
+                            "'{}' is not a folder",
+                            path.display()
+                        ))))
+                    }
+                }
+                None => cosmic::action::none(),
+            },
+        )
+    }
+
     pub fn handle_move_vault(&mut self) -> Task<cosmic::Action<Message>> {
         let old_vault_path = self.config.vault_path.clone();
 

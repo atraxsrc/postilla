@@ -36,6 +36,29 @@ just build-release
 sudo just install
 ```
 
+### Testing this fork next to the Flathub Cedilla
+
+This fork uses its own application id (`dev.mariinkys.Cedilla.Fork`), so it can be built, installed and run
+side by side with the upstream Cedilla from Flathub: it has its own launcher entry ("Cedilla Fork"), its own
+config, its own themes folder and its own default vault.
+
+Build dependencies on Pop!\_OS / Ubuntu:
+
+```sh
+sudo apt install just pkg-config libxkbcommon-dev libwayland-dev libfontconfig-dev libfreetype-dev libexpat1-dev
+```
+
+Run it straight from the source tree without installing anything:
+
+```sh
+cargo run --release
+```
+
+To work on the notes of your existing Cedilla, open *Settings → General → Use another folder as vault* and pick
+the vault of the other installation. Nothing is moved or copied, the fork just opens that folder. The Flatpak
+keeps its vault in `~/.var/app/dev.mariinkys.Cedilla/data/dev.mariinkys.Cedilla/vault`, a native install in
+`~/.local/share/dev.mariinkys.Cedilla/vault`.
+
 ## Features
 
 - **Vault** of notes with folders, drag free move/rename, external change detection

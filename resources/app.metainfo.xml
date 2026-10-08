@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
-  <id>dev.mariinkys.Cedilla</id>
+  <id>dev.mariinkys.Cedilla.Fork</id>
   <developer id="dev.mariinkys">
     <name>mariinkys</name>
   </developer>
@@ -9,7 +9,7 @@
   <url type="donation">https://buymeacoffee.com/mariinkys</url>
   <url type="vcs-browser">https://github.com/mariinkys/cedilla</url>
 
-  <name>Cedilla</name>
+  <name>Cedilla Fork</name>
   <summary>Markdown Text Editor</summary>
   <summary xml:lang="cs">Editor textu Markdown</summary>
 
@@ -53,7 +53,7 @@
 
   <icon type="remote" height="256" width="256">
     https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/icons/hicolor/scalable/apps/icon.svg</icon>
-  <launchable type="desktop-id">dev.mariinkys.Cedilla.desktop</launchable>
+  <launchable type="desktop-id">dev.mariinkys.Cedilla.Fork.desktop</launchable>
   <content_rating type="oars-1.1" />
 
   <provides>

@@ -76,6 +76,8 @@ window-opacity = Window opacity
 
 <#-- Settings Context Page -->
 general = General
+open-vault = Use another folder as vault
+open-vault-info = Pick any existing folder and use it as the vault without moving anything. Useful to work on the notes of another Cedilla installation, e.g. the Flatpak one keeps its vault in ~/.var/app/dev.mariinkys.Cedilla/data/dev.mariinkys.Cedilla/vault
 help-bar = Editor Help Bar
 status-bar = Status Bar
 move-vault = Move Vault

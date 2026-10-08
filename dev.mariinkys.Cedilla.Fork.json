@@ -1,5 +1,5 @@
 {
-  "app-id": "dev.mariinkys.Cedilla",
+  "app-id": "dev.mariinkys.Cedilla.Fork",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "26.08",
   "sdk": "org.freedesktop.Sdk",
@@ -39,9 +39,9 @@
         "cargo --offline fetch --manifest-path Cargo.toml --verbose",
         "cargo --offline build --release --verbose",
         "install -Dm0755 -s ./target/release/cedilla /app/bin/cedilla",
-        "install -Dm0644 ./resources/app.desktop /app/share/applications/dev.mariinkys.Cedilla.desktop",
-        "install -Dm0644 ./resources/app.metainfo.xml /app/share/metainfo/dev.mariinkys.Cedilla.metainfo.xml",
-        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/dev.mariinkys.Cedilla.svg"
+        "install -Dm0644 ./resources/app.desktop /app/share/applications/dev.mariinkys.Cedilla.Fork.desktop",
+        "install -Dm0644 ./resources/app.metainfo.xml /app/share/metainfo/dev.mariinkys.Cedilla.Fork.metainfo.xml",
+        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/dev.mariinkys.Cedilla.Fork.svg"
       ],
       "sources": [
         {
