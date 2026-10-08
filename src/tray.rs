@@ -41,7 +41,7 @@ impl Tray for CedillaTray {
 
     fn icon_name(&self) -> String {
         // Used when the icon is installed in the icon theme (just install / deb)
-        crate::app::APP_ID.to_string()
+        format!("{}-symbolic", crate::app::APP_ID)
     }
 
     fn icon_pixmap(&self) -> Vec<Icon> {
@@ -106,9 +106,11 @@ pub fn subscription() -> Subscription<TrayEvent> {
     })
 }
 
-const ICON_SVG: &[u8] = include_bytes!("../resources/icons/hicolor/scalable/apps/icon.svg");
+const ICON_SVG: &[u8] = include_bytes!("../resources/icons/hicolor/symbolic/apps/icon-symbolic.svg");
 
-/// Rasterizes the application icon at the sizes panels commonly use.
+/// Rasterizes the symbolic application icon at the sizes panels commonly use,
+/// tinted with the text color of the active theme so it blends in with the
+/// other panel icons.
 fn render_icons() -> Vec<Icon> {
     let tree = match resvg::usvg::Tree::from_data(ICON_SVG, &resvg::usvg::Options::default()) {
         Ok(tree) => tree,
@@ -117,6 +119,13 @@ fn render_icons() -> Vec<Icon> {
             return Vec::new();
         }
     };
+
+    let tint = cosmic::theme::active().cosmic().on_bg_color();
+    let (tr, tg, tb) = (
+        (tint.red * 255.0).round() as u8,
+        (tint.green * 255.0).round() as u8,
+        (tint.blue * 255.0).round() as u8,
+    );
 
     [22u32, 32, 48, 64]
         .into_iter()
@@ -129,14 +138,13 @@ fn render_icons() -> Vec<Icon> {
                 &mut pixmap.as_mut(),
             );
 
-            // StatusNotifierItem wants ARGB32 in network byte order, not premultiplied
+            // StatusNotifierItem wants ARGB32 in network byte order, not
+            // premultiplied. Only the shape (alpha) of the icon is kept, the
+            // color is the theme's.
             let data = pixmap
                 .pixels()
                 .iter()
-                .flat_map(|px| {
-                    let c = px.demultiply();
-                    [c.alpha(), c.red(), c.green(), c.blue()]
-                })
+                .flat_map(|px| [px.demultiply().alpha(), tr, tg, tb])
                 .collect();
 
             Some(Icon {

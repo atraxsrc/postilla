@@ -68,10 +68,53 @@ impl AppModel {
             Err(_) => ThemeBuilder::light(),
         };
 
-        if self.config.window_opacity < 100 {
+        // Background color: explicit hex setting first, then the highlighter theme
+        // background when the user wants the theme colors everywhere
+        let custom_rgb = crate::syntax_theme::parse_color(&self.config.window_background)
+            .ok()
+            .map(|c| (c.r as f32 / 255.0, c.g as f32 / 255.0, c.b as f32 / 255.0))
+            .or_else(|| {
+                self.config
+                    .highlighter_theme_colors
+                    .is_yes()
+                    .then(|| widgets::highlighter::theme_background(self.active_syntax_theme()))
+                    .flatten()
+                    .map(|c| (c.r, c.g, c.b))
+            });
+
+        let opacity = self.config.window_opacity_factor();
+        if custom_rgb.is_some() || self.config.window_opacity < 100 {
             let mut bg = base.cosmic().bg_color();
-            bg.alpha = self.config.window_opacity_factor();
+            if let Some((r, g, b)) = custom_rgb {
+                bg.red = r;
+                bg.green = g;
+                bg.blue = b;
+            }
+            // used when the window is drawn without compositor blur
+            bg.alpha = opacity;
             builder = builder.bg_color(bg);
+        }
+
+        if self.config.window_opacity < 100 {
+            // With blur active libcosmic paints the "frosted" variants whose alpha
+            // comes from this table (indexed by the blur strength), so the slider
+            // has to drive the table rather than the base color alpha.
+            builder.alpha_map = cosmic::cosmic_theme::AlphaMap {
+                extremely_low: opacity,
+                extremely_low_2: opacity,
+                very_low: opacity,
+                very_low_2: opacity,
+                low: opacity,
+                low_2: opacity,
+                medium: opacity,
+                medium_2: opacity,
+                high: opacity,
+                high_2: opacity,
+                very_high: opacity,
+                very_high_2: opacity,
+                extremely_high: opacity,
+                extremely_high_2: opacity,
+            };
         }
 
         match self.config.frosted_glass {
@@ -155,6 +198,42 @@ impl AppModel {
                 });
                 self.apply_theme()
             }
+            ConfigInput::WindowBackground(value) => {
+                let value = value.trim().to_string();
+                let _ = self.apply_config(move |config, handler| {
+                    if let Some(h) = handler {
+                        config
+                            .set_window_background(h, value)
+                            .map_err(|e| e.to_string())?;
+                    } else {
+                        config.window_background = value;
+                    }
+                    Ok(())
+                });
+                self.apply_theme()
+            }
+            ConfigInput::HighlighterThemeColors(state) => {
+                let _ = self.apply_config(|config, handler| {
+                    if let Some(h) = handler {
+                        config
+                            .set_highlighter_theme_colors(h, state)
+                            .map_err(|e| e.to_string())?;
+                    } else {
+                        config.highlighter_theme_colors = state;
+                    }
+                    Ok(())
+                });
+                // the window background may follow the highlighter theme now
+                self.apply_theme()
+            }
+            ConfigInput::UpdateLightHighlighterTheme(index) => {
+                let task = self.set_highlighter_theme(index, false);
+                task.chain(self.apply_theme())
+            }
+            ConfigInput::UpdateDarkHighlighterTheme(index) => {
+                let task = self.set_highlighter_theme(index, true);
+                task.chain(self.apply_theme())
+            }
             ConfigInput::Autosave(index) => {
                 let delay = AUTOSAVE_DELAYS.get(index).copied().unwrap_or(0);
                 let _ = self.apply_config(move |config, handler| {
@@ -220,22 +299,6 @@ impl AppModel {
                     Ok(())
                 })
             }
-            ConfigInput::UpdateLightHighlighterTheme(index) => {
-                self.set_highlighter_theme(index, false)
-            }
-            ConfigInput::UpdateDarkHighlighterTheme(index) => {
-                self.set_highlighter_theme(index, true)
-            }
-            ConfigInput::HighlighterThemeColors(state) => self.apply_config(|config, handler| {
-                if let Some(h) = handler {
-                    config
-                        .set_highlighter_theme_colors(h, state)
-                        .map_err(|e| e.to_string())?;
-                } else {
-                    config.highlighter_theme_colors = state;
-                }
-                Ok(())
-            }),
             ConfigInput::ImportSyntaxTheme => Task::perform(
                 async move { utils::files::open_theme_file_picker().await },
                 |path| match path {

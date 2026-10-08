@@ -38,6 +38,8 @@ pub struct CedillaConfig {
     pub frosted_glass: FrostedGlass,
     /// Window background opacity in percent (100 = opaque)
     pub window_opacity: u8,
+    /// Custom window background color as hex (`#rrggbb`), empty = theme default
+    pub window_background: String,
     /// Seconds of inactivity before an open file is saved automatically (0 = off)
     pub autosave_delay: u32,
 }
@@ -70,6 +72,7 @@ impl Default for CedillaConfig {
             selected_font_family: None,
             frosted_glass: FrostedGlass::default(),
             window_opacity: 100,
+            window_background: String::new(),
             autosave_delay: 0,
         }
     }
@@ -102,9 +105,12 @@ impl CedillaConfig {
         f32::from(self.window_opacity.clamp(MIN_WINDOW_OPACITY, 100)) / 100.0
     }
 
-    /// Whether the window should be drawn with a custom (translucent/frosted) theme
+    /// Whether the window should be drawn with a custom (translucent/frosted/recolored) theme
     pub fn needs_custom_theme(&self) -> bool {
-        self.frosted_glass != FrostedGlass::FollowSystem || self.window_opacity < 100
+        self.frosted_glass != FrostedGlass::FollowSystem
+            || self.window_opacity < 100
+            || !self.window_background.trim().is_empty()
+            || self.highlighter_theme_colors.is_yes()
     }
 }
 
@@ -412,6 +418,8 @@ pub enum ConfigInput {
     FrostedGlass(usize),
     /// Update the window opacity (percent)
     WindowOpacity(u8),
+    /// Update the custom window background color (hex, empty = theme default)
+    WindowBackground(String),
     /// Update the autosave delay (index in [`AUTOSAVE_DELAYS`])
     Autosave(usize),
 }

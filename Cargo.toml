@@ -31,6 +31,7 @@ assets = [
     ["resources/app.desktop", "usr/share/applications/dev.mariinkys.Cedilla.Fork.desktop", "644"],
     ["resources/app.metainfo.xml", "usr/share/metainfo/dev.mariinkys.Cedilla.Fork.metainfo.xml", "644"],
     ["resources/icons/hicolor/scalable/apps/icon.svg", "usr/share/icons/hicolor/scalable/apps/dev.mariinkys.Cedilla.Fork.svg", "644"],
+    ["resources/icons/hicolor/symbolic/apps/icon-symbolic.svg", "usr/share/icons/hicolor/symbolic/apps/dev.mariinkys.Cedilla.Fork-symbolic.svg", "644"],
     ["README.md", "usr/share/doc/cedilla-fork/README.md", "644"],
     ["resources/themes/README.md", "usr/share/doc/cedilla-fork/themes/README.md", "644"],
     ["resources/themes/example-cedilla-theme.ron", "usr/share/doc/cedilla-fork/themes/example-cedilla-theme.ron", "644"],

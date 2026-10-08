@@ -24,6 +24,7 @@ bin-dst := base-dir / 'bin' / name
 desktop-dst := base-dir / 'share' / 'applications' / desktop
 icons-dst := base-dir / 'share' / 'icons' / 'hicolor'
 icon-svg-dst := icons-dst / 'scalable' / 'apps' / icon-svg
+icon-symbolic-dst := icons-dst / 'symbolic' / 'apps' / (appid + '-symbolic.svg')
 
 # Default recipe which runs `just build-release`
 default: build-release
@@ -66,10 +67,11 @@ install:
     install -Dm0644 {{ 'resources' / 'app.desktop' }} {{desktop-dst}}
     install -Dm0644 {{ 'resources' / 'app.metainfo.xml' }} {{appdata-dst}}
     install -Dm0644 {{ 'resources' / 'icons' / 'hicolor' / 'scalable' / 'apps' / 'icon.svg' }} {{icon-svg-dst}}
+    install -Dm0644 {{ 'resources' / 'icons' / 'hicolor' / 'symbolic' / 'apps' / 'icon-symbolic.svg' }} {{icon-symbolic-dst}}
 
 # Uninstalls installed files
 uninstall:
-    rm {{bin-dst}} {{desktop-dst}} {{icon-svg-dst}}
+    rm {{bin-dst}} {{desktop-dst}} {{icon-svg-dst}} {{icon-symbolic-dst}}
 
 # Builds a Debian package in target/debian (needs `cargo install cargo-deb` and `dpkg-dev`)
 deb *args:

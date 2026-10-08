@@ -73,6 +73,8 @@ frosted-follow-system = Follow desktop
 frosted-enabled = Enabled
 frosted-disabled = Disabled
 window-opacity = Window opacity
+window-background = Window background color
+window-background-description = Hex color (#rrggbb) for the whole window. Leave empty to use the theme color, or the highlighter theme background when "Use highlighter theme colors" is on
 
 <#-- Settings Context Page -->
 general = General

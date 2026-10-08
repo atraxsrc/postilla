@@ -464,6 +464,7 @@ impl cosmic::Application for AppModel {
         let view_switcher = tooltip(
             widget::segmented_control::horizontal(&self.view_mode_model)
                 .button_height(28)
+                .width(Length::Shrink)
                 .on_activate(Message::ViewModeSelected),
             container(text(format!("{} · Ctrl+1 / Ctrl+2 / Ctrl+3", fl!("view"))))
                 .class(cosmic::theme::Container::Background)
@@ -495,8 +496,18 @@ impl cosmic::Application for AppModel {
             tooltip::Position::Bottom,
         );
 
+        let file_manager_button = tooltip(
+            widget::button::icon(icons::get_handle("folder-open-symbolic", 18))
+                .on_press(Message::OpenInFileExplorer(self.config.vault_path()))
+                .class(theme::Button::Icon),
+            container(text(fl!("open-file-manager")))
+                .class(cosmic::theme::Container::Background)
+                .padding(8.),
+            tooltip::Position::Bottom,
+        );
+
         vec![
-            row![view_switcher, zen_button, settings_button]
+            row![view_switcher, zen_button, file_manager_button, settings_button]
                 .spacing(cosmic::theme::spacing().space_xxs)
                 .align_y(Alignment::Center)
                 .into(),
@@ -1101,6 +1112,17 @@ impl AppModel {
                                 |v| Message::ConfigInput(ConfigInput::WindowOpacity(v)),
                             )
                             .step(5u8),
+                        ),
+                )
+                .add(
+                    widget::settings::item::builder(fl!("window-background"))
+                        .description(fl!("window-background-description"))
+                        .control(
+                            text_input("#1e1e2e", &self.config.window_background)
+                                .on_input(|v| {
+                                    Message::ConfigInput(ConfigInput::WindowBackground(v))
+                                })
+                                .width(Length::Fixed(140.)),
                         ),
                 )
                 .into(),
