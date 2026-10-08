@@ -256,7 +256,13 @@ pub fn load_theme_file(path: &Path) -> Result<(String, Theme), anywho::Error> {
 
 /// Parses a RON theme (Cedilla or COSMIC Terminal format).
 pub fn parse_ron_theme(text: &str, fallback_name: &str) -> Result<(String, Theme), anywho::Error> {
-    let raw: RonTheme = ron::from_str(text).map_err(|e| anywho!("Invalid RON theme: {e}"))?;
+    // COSMIC Terminal (and most hand written themes) write optional values
+    // without `Some(...)`, so accept both forms.
+    let options = ron::Options::default()
+        .with_default_extension(ron::extensions::Extensions::IMPLICIT_SOME);
+    let raw: RonTheme = options
+        .from_str(text)
+        .map_err(|e| anywho!("Invalid RON theme: {e}"))?;
 
     let name = raw
         .name
