@@ -20,40 +20,54 @@ impl AppModel {
         }
     }
 
+    /// Exports the current document to PDF, rendered offline with Typst
     pub fn handle_export_pdf(&mut self) -> Task<cosmic::Action<Message>> {
-        let State::Ready { editor, .. } = &mut self.state else {
+        let State::Ready { editor, .. } = &self.state else {
             return Task::none();
         };
 
         let content = editor.content.text();
+        if content.trim().is_empty() {
+            return Task::none();
+        }
 
-        if self.config.is_gotenberg_configured() && !content.trim().is_empty() {
-            let client = self.gotenberg_client.clone();
-            let file_path = editor.path.clone();
+        let file_path = editor.path.clone();
 
-            Task::perform(
-                async move {
-                    match utils::files::open_pdf_file_saver().await {
-                        Some(path) => Some(
-                            utils::pdf::export_pdf(client, file_path, content, path)
-                                .await,
-                        ),
-                        // Error selecting where to save the file
-                        None => None,
+        Task::perform(
+            async move {
+                match utils::files::open_pdf_file_saver().await {
+                    Some(destination) => {
+                        Some(utils::typst_export::export_pdf(file_path, content, destination).await)
                     }
-                },
-                |res| match res {
-                    Some(result) => match result {
-                        Ok(_) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
-                            "pdf-exported"
-                        )))),
-                        Err(e) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
-                    },
-                    None => cosmic::action::none(),
-                },
-            )
-        } else {
-            Task::none()
+                    // Error selecting where to save the file
+                    None => None,
+                }
+            },
+            |res| match res {
+                Some(Ok(())) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
+                    "pdf-exported"
+                )))),
+                Some(Err(e)) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
+                None => cosmic::action::none(),
+            },
+        )
+    }
+
+    /// Show / Quit from the tray icon
+    pub fn handle_tray(&mut self, event: crate::tray::TrayEvent) -> Task<cosmic::Action<Message>> {
+        let show = match self.core.main_window_id() {
+            Some(id) => Task::batch([
+                cosmic::iced::window::minimize(id, false),
+                cosmic::iced::window::gain_focus(id),
+            ]),
+            None => Task::none(),
+        };
+
+        match event {
+            crate::tray::TrayEvent::Show => show,
+            crate::tray::TrayEvent::Quit => {
+                show.chain(Task::done(cosmic::action::app(Message::AppCloseRequested)))
+            }
         }
     }
 
@@ -78,7 +92,7 @@ impl AppModel {
             async move {
                 match utils::files::open_html_file_saver(suggested_name).await {
                     Some(destination) => {
-                        Some(utils::pdf::export_html(file_path, content, destination).await)
+                        Some(utils::html::export_html(file_path, content, destination).await)
                     }
                     None => None,
                 }
@@ -103,7 +117,7 @@ impl AppModel {
         let file_path = editor.path.clone();
 
         Task::perform(
-            async move { utils::pdf::markdown_to_html_document(file_path, &content).await },
+            async move { utils::html::markdown_to_html_document(file_path, &content).await },
             |html| cosmic::action::app(Message::CopyToClipboard(html)),
         )
     }

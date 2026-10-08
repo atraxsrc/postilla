@@ -3,6 +3,7 @@ use typst::foundations::{Bytes, Datetime, Duration};
 use typst::syntax::{FileId, Source};
 use typst::text::{Font, FontBook};
 use typst::{Library, LibraryExt, World};
+use typst_layout::PagedDocument;
 
 // Help from: https://github.com/tfachmann/typst-as-library/blob/main/src/lib.rs
 
@@ -11,11 +12,18 @@ pub struct MinimalWorld {
     book: typst::utils::LazyHash<FontBook>,
     fonts: Vec<Font>,
     source: Source,
-    files: HashMap<FileId, Bytes>,
+    /// Extra files (images...) addressable from the document by their
+    /// project relative path, e.g. `#image("img/photo.png")`.
+    files: HashMap<String, Bytes>,
 }
 
 impl MinimalWorld {
     pub fn new(source: &str) -> Self {
+        Self::with_files(source, HashMap::new())
+    }
+
+    /// A world for `source` that can also serve the given files.
+    pub fn with_files(source: &str, files: HashMap<String, Vec<u8>>) -> Self {
         let mut fonts = Vec::new();
         let mut book = FontBook::new();
 
@@ -32,9 +40,16 @@ impl MinimalWorld {
             book: typst::utils::LazyHash::new(book),
             fonts,
             source: Source::detached(source),
-            files: HashMap::new(),
+            files: files
+                .into_iter()
+                .map(|(path, bytes)| (normalize_path(&path), Bytes::new(bytes)))
+                .collect(),
         }
     }
+}
+
+fn normalize_path(path: &str) -> String {
+    path.trim_start_matches("./").trim_start_matches('/').to_string()
 }
 
 impl World for MinimalWorld {
@@ -57,10 +72,11 @@ impl World for MinimalWorld {
     }
 
     fn file(&self, id: FileId) -> typst::diag::FileResult<Bytes> {
+        let path = id.vpath().get_without_slash().to_string();
         self.files
-            .get(&id)
+            .get(&normalize_path(&path))
             .cloned()
-            .ok_or(typst::diag::FileError::NotFound("<embedded>".into()))
+            .ok_or_else(|| typst::diag::FileError::NotFound(path.into()))
     }
 
     fn font(&self, index: usize) -> Option<Font> {
@@ -70,4 +86,29 @@ impl World for MinimalWorld {
     fn today(&self, _offset: Option<Duration>) -> Option<Datetime> {
         None
     }
+}
+
+/// Compiles a complete Typst document to PDF.
+///
+/// `files` are the extra files (images) the document references, keyed by
+/// the path used in the document.
+pub fn compile_pdf(source: &str, files: HashMap<String, Vec<u8>>) -> Result<Vec<u8>, String> {
+    let world = MinimalWorld::with_files(source, files);
+
+    let compiled = typst::compile::<PagedDocument>(&world);
+    let document = compiled.output.map_err(|errors| {
+        errors
+            .iter()
+            .map(|d| d.message.to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    })?;
+
+    typst_pdf::pdf(&document, &typst_pdf::PdfOptions::default()).map_err(|errors| {
+        errors
+            .iter()
+            .map(|d| d.message.to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    })
 }

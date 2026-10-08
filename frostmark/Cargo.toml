@@ -21,6 +21,7 @@ typst-assets = { version = "0.15.1", features = ["fonts"] }
 
 merman = { version = "0.8.0-alpha.7", default-features = false, features = ["png", "all-diagrams"]}
 image.workspace = true
+typst-pdf = "0.15.1"
 
 [dev-dependencies]
 tokio.workspace = true

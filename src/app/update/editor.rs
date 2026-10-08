@@ -141,15 +141,19 @@ impl AppModel {
         }
     }
 
-    /// Text read from the toolkit clipboard (fallback when the system clipboard is unavailable)
+    /// Text read from the toolkit clipboard; falls back to the system clipboard
+    /// when the toolkit had nothing to offer.
     pub fn handle_pasted_text(&mut self, text: Option<String>) -> Task<cosmic::Action<Message>> {
+        let text = match text {
+            Some(text) if !text.is_empty() => Some(text),
+            _ => self.clipboard_read().filter(|t| !t.is_empty()),
+        };
+
         match text {
-            Some(text) if !text.is_empty() => {
-                self.handle_edit(text_editor::Action::Edit(text_editor::Edit::Paste(
-                    std::sync::Arc::new(text),
-                )))
-            }
-            _ => Task::none(),
+            Some(text) => self.handle_edit(text_editor::Action::Edit(text_editor::Edit::Paste(
+                std::sync::Arc::new(text),
+            ))),
+            None => Task::none(),
         }
     }
 
@@ -276,12 +280,9 @@ impl AppModel {
             return Task::batch([download.chain(cursor_task), autosave]);
         }
 
-        // Fall back to standard text paste through the system clipboard...
-        if let Some(text) = self.clipboard_read() {
-            return self.handle_pasted_text(Some(text));
-        }
-
-        // ...or the toolkit clipboard
+        // Plain text: the toolkit clipboard (the focused window's data device) is
+        // the most reliable source, the system clipboard is tried if it comes
+        // back empty, see `handle_pasted_text`.
         cosmic::iced::clipboard::read().map(|text| cosmic::action::app(Message::PastedText(text)))
     }
 

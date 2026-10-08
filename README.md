@@ -81,7 +81,8 @@ keeps its vault in `~/.var/app/dev.mariinkys.Cedilla/data/dev.mariinkys.Cedilla/
 - **Outline** (`Ctrl+Shift+O`): jump between the headings of the document
 - **Search in vault** (`Ctrl+Shift+F`): full text (or regex) search across every note, open a result at the matching line
 - **Autosave** with a configurable delay
-- **Export** to standalone HTML, copy as HTML, or export to PDF (Gotenberg)
+- **Export** to PDF (rendered offline with the bundled Typst engine, no external service needed), to standalone HTML, or copy as HTML
+- **Tray icon** in the panel with *Show* and *Quit*
 - Word count, character count and reading time in the status bar
 - **Fully customizable syntax highlighting**: import TextMate/Sublime `.tmTheme` files, COSMIC Terminal color schemes or simple Cedilla RON themes, and optionally paint the editor with the theme colors
 - **Frosted glass** window effect with adjustable opacity on COSMIC

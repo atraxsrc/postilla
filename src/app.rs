@@ -96,8 +96,6 @@ pub struct AppModel {
     syntax_theme_names: Vec<String>,
     /// Currently selected path on the navbar (i need these for accurate file creadtion deletion...)
     selected_nav_path: Option<PathBuf>,
-    /// Gotenberg client, needed for Pdf exporting
-    gotenberg_client: gotenberg_pdf::Client,
     /// Model of the view mode switcher in the header bar
     view_mode_model: segmented_button::SingleSelectModel,
     /// Distraction free mode (hides every bar around the editor)
@@ -275,6 +273,8 @@ pub enum Message {
     CopyHtml,
     /// Callback after using asks to close the app
     AppCloseRequested,
+    /// Something happened on the tray icon
+    Tray(crate::tray::TrayEvent),
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -334,8 +334,6 @@ impl cosmic::Application for AppModel {
             .developers([("mariinkys", "kysdev.owjga@aleeas.com")])
             .comments("\"Pop Icons\" by System76 is licensed under CC-SA-4.0");
 
-        let gotenberg_url = flags.config.gotenberg_url.clone();
-
         let font = if let Some(ref name) = flags.config.selected_font_family {
             let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
             Font {
@@ -384,7 +382,6 @@ impl cosmic::Application for AppModel {
             syntax_themes,
             syntax_theme_names,
             selected_nav_path: None,
-            gotenberg_client: gotenberg_pdf::Client::new(&gotenberg_url),
             view_mode_model,
             zen_mode: false,
             zen_restore_nav: true,
@@ -444,9 +441,17 @@ impl cosmic::Application for AppModel {
 
         vec![app_menu::menu_bar(
             &self.key_binds,
-            view_mode,
-            self.zen_mode,
-            self.config.is_gotenberg_configured(),
+            app_menu::ViewState {
+                view_mode,
+                zen_mode: self.zen_mode,
+                sidebar: if self.zen_mode {
+                    self.zen_restore_nav
+                } else {
+                    self.core.nav_bar_active()
+                },
+                help_bar: self.config.show_helper_header_bar.is_shown(),
+                status_bar: self.config.show_status_bar.is_shown(),
+            },
         )]
     }
 
@@ -480,8 +485,18 @@ impl cosmic::Application for AppModel {
             tooltip::Position::Bottom,
         );
 
+        let settings_button = tooltip(
+            widget::button::icon(icons::get_handle("settings-symbolic", 18))
+                .on_press(Message::ToggleContextPage(ContextPage::Settings))
+                .class(theme::Button::Icon),
+            container(text(format!("{} · Ctrl+,", fl!("settings"))))
+                .class(cosmic::theme::Container::Background)
+                .padding(8.),
+            tooltip::Position::Bottom,
+        );
+
         vec![
-            row![view_switcher, zen_button]
+            row![view_switcher, zen_button, settings_button]
                 .spacing(cosmic::theme::spacing().space_xxs)
                 .align_y(Alignment::Center)
                 .into(),
@@ -789,6 +804,8 @@ impl cosmic::Application for AppModel {
             }),
             // Watch for external file changes
             file_watch_subscription(watched_path),
+            // Tray icon on the panel
+            crate::tray::subscription().map(Message::Tray),
         ];
 
         Subscription::batch(subscriptions)
@@ -871,6 +888,7 @@ impl cosmic::Application for AppModel {
             Message::ExportHtml => self.handle_export_html(),
             Message::CopyHtml => self.handle_copy_html(),
             Message::AppCloseRequested => self.handle_app_close_requested(),
+            Message::Tray(event) => self.handle_tray(event),
         }
     }
 }
@@ -1174,28 +1192,6 @@ impl AppModel {
                             },
                         ),
                     ),
-                )
-                .add(
-                    cosmic::widget::column::with_children(vec![
-                        column![
-                            text::body(fl!("pdf-exporting")),
-                            text::caption(fl!("gotenberg-url"))
-                        ]
-                        .into(),
-                        text_input(fl!("gotenberg-url"), &self.config.gotenberg_url)
-                            .on_input(|v| Message::ConfigInput(ConfigInput::GotenbergUrlInput(v)))
-                            .into(),
-                        row![
-                            button::text(fl!("more-info")).on_press(Message::LaunchUrl(
-                                String::from("https://gotenberg.dev/")
-                            )),
-                            horizontal(),
-                            button::suggested(fl!("apply"))
-                                .on_press(Message::ConfigInput(ConfigInput::GotenbergUrlSave))
-                        ]
-                        .into(),
-                    ])
-                    .spacing(spacing.space_xxs),
                 )
                 .into(),
             widget::settings::section()
@@ -1724,11 +1720,8 @@ fn cedilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                     .on_press(Message::ToggleContextPage(ContextPage::Outline)),
                 button::icon(icons::get_handle("search-vault-symbolic", 18))
                     .on_press(Message::ToggleContextPage(ContextPage::VaultSearch)),
-                button::icon(icons::get_handle("helperbar/pdf-symbolic", 18)).on_press_maybe(
-                    app_config
-                        .is_gotenberg_configured()
-                        .then_some(Message::ExportPDF)
-                )
+                button::icon(icons::get_handle("helperbar/pdf-symbolic", 18))
+                    .on_press(Message::ExportPDF)
             ]
             .padding(spacing.space_xxs)
             .spacing(spacing.space_xxs),

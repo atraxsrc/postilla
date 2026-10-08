@@ -209,20 +209,6 @@ impl AppModel {
                 }
                 Ok(())
             }),
-            ConfigInput::GotenbergUrlInput(state) => self.apply_config(|config, handler| {
-                if let Some(h) = handler {
-                    config
-                        .set_gotenberg_url(h, state)
-                        .map_err(|e| e.to_string())?;
-                } else {
-                    config.gotenberg_url = state;
-                }
-                Ok(())
-            }),
-            ConfigInput::GotenbergUrlSave => {
-                self.gotenberg_client = gotenberg_pdf::Client::new(&self.config.gotenberg_url);
-                Task::none()
-            }
             ConfigInput::UpdateTextSize(new_size) => {
                 let size = new_size as i32;
                 self.apply_config(|config, handler| {

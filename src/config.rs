@@ -26,7 +26,6 @@ pub struct CedillaConfig {
     pub open_last_file: BoolState,
     pub last_open_file: Option<PathBuf>,
     pub scrollbar_sync: BoolState,
-    pub gotenberg_url: String,
     pub text_size: i32,
     pub light_highlighter_theme: SyntaxThemeId,
     pub dark_highlighter_theme: SyntaxThemeId,
@@ -64,7 +63,6 @@ impl Default for CedillaConfig {
             open_last_file: BoolState::default(),
             last_open_file: None,
             scrollbar_sync: BoolState::default(),
-            gotenberg_url: String::new(),
             text_size: 16,
             light_highlighter_theme: SyntaxThemeId::new(crate::syntax_theme::DEFAULT_LIGHT),
             dark_highlighter_theme: SyntaxThemeId::new(crate::syntax_theme::DEFAULT_DARK),
@@ -97,11 +95,6 @@ impl CedillaConfig {
     /// Returns the current vault path
     pub fn vault_path(&self) -> PathBuf {
         PathBuf::from(&self.vault_path)
-    }
-
-    /// Returns true if the Gotenberg URL is not empty
-    pub fn is_gotenberg_configured(&self) -> bool {
-        !self.gotenberg_url.trim().is_empty()
     }
 
     /// Window opacity clamped to a usable range, as a factor
@@ -395,10 +388,6 @@ pub enum ConfigInput {
     OpenLastFile(BoolState),
     /// Update if the user wants the editor and preview scrollbars to be in sync
     ScrollbarSync(BoolState),
-    /// Update the current gotenberg client url
-    GotenbergUrlInput(String),
-    /// Save the new gotenberg url
-    GotenbergUrlSave,
     /// Update the editor and preview text size
     UpdateTextSize(u16),
     /// Update the highlighter theme for light app themes (index in the theme registry)

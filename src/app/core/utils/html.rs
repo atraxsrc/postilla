@@ -238,28 +238,3 @@ pub async fn export_html(
 
     Ok(())
 }
-
-pub async fn export_pdf(
-    client: gotenberg_pdf::Client,
-    file_path: Option<PathBuf>,
-    file_content: String,
-    file_destination_path: String,
-) -> Result<(), anywho::Error> {
-    let full_html = markdown_to_html_document(file_path, &file_content).await;
-
-    let options = gotenberg_pdf::WebOptions {
-        skip_network_idle_events: Some(false),
-        ..Default::default()
-    };
-
-    let pdf_bytes = client
-        .pdf_from_html(&full_html, options)
-        .await
-        .map_err(|e| anywho::anywho!("{e}"))?;
-
-    tokio::fs::write(file_destination_path, pdf_bytes)
-        .await
-        .map_err(|e| anywho::anywho!("{e}"))?;
-
-    Ok(())
-}

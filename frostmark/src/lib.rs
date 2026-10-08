@@ -19,3 +19,4 @@ pub use style::Style;
 // not very clean but the easies way to get pdf export working for mermaid too
 pub use renderer::mermaid::render_mermaid_png;
 pub use renderer::typst::render_typst_png;
+pub use typst_world::compile_pdf;

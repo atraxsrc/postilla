@@ -72,9 +72,25 @@ pub enum MenuAction {
     ToggleZenMode,
     /// Show the document outline
     Outline,
+    /// Show / hide the vault sidebar
+    ToggleSidebar,
+    /// Show / hide the editor help bar
+    ToggleHelpBar,
+    /// Show / hide the status bar
+    ToggleStatusBar,
 
     /// Close the current open popup dialog
     CloseCurrentDialog,
+}
+
+/// What the View menu needs to know to draw its check marks
+#[derive(Clone, Copy, Debug)]
+pub struct ViewState {
+    pub view_mode: ViewMode,
+    pub zen_mode: bool,
+    pub sidebar: bool,
+    pub help_bar: bool,
+    pub status_bar: bool,
 }
 
 impl MenuAction {
@@ -99,15 +115,16 @@ impl menu::action::MenuAction for MenuAction {
 
 pub fn menu_bar<'a>(
     key_binds: &HashMap<KeyBind, MenuAction>,
-    view_mode: ViewMode,
-    zen_mode: bool,
-    gotenberg_configured: bool,
+    state: ViewState,
 ) -> Element<'a, Message> {
-    let export_pdf = if gotenberg_configured {
-        menu::Item::Button(fl!("export-pdf"), None, MenuAction::ExportPdf)
-    } else {
-        menu::Item::ButtonDisabled(fl!("export-pdf"), None, MenuAction::ExportPdf)
-    };
+    let ViewState {
+        view_mode,
+        zen_mode,
+        sidebar,
+        help_bar,
+        status_bar,
+    } = state;
+    let export_pdf = menu::Item::Button(fl!("export-pdf"), None, MenuAction::ExportPdf);
 
     menu::bar(vec![
         menu::Tree::with_children(
@@ -191,6 +208,15 @@ pub fn menu_bar<'a>(
                         None,
                         view_mode == ViewMode::Preview,
                         MenuAction::ViewPreview,
+                    ),
+                    menu::Item::Divider,
+                    menu::Item::CheckBox(fl!("sidebar"), None, sidebar, MenuAction::ToggleSidebar),
+                    menu::Item::CheckBox(fl!("help-bar"), None, help_bar, MenuAction::ToggleHelpBar),
+                    menu::Item::CheckBox(
+                        fl!("status-bar"),
+                        None,
+                        status_bar,
+                        MenuAction::ToggleStatusBar,
                     ),
                     menu::Item::Divider,
                     menu::Item::CheckBox(fl!("zen-mode"), None, zen_mode, MenuAction::ToggleZenMode),

@@ -67,6 +67,32 @@ impl AppModel {
                 Task::none() // handled above
             }
             MenuAction::ToggleZenMode => self.handle_toggle_zen_mode(),
+            MenuAction::ToggleSidebar => {
+                if self.zen_mode {
+                    self.zen_restore_nav = !self.zen_restore_nav;
+                } else {
+                    self.core.nav_bar_toggle();
+                }
+                Task::none()
+            }
+            MenuAction::ToggleHelpBar => {
+                let next = if self.config.show_helper_header_bar.is_shown() {
+                    crate::config::ShowState::Hide
+                } else {
+                    crate::config::ShowState::Show
+                };
+                self.handle_config_input(crate::config::ConfigInput::HelperHeaderBarShowState(
+                    next,
+                ))
+            }
+            MenuAction::ToggleStatusBar => {
+                let next = if self.config.show_status_bar.is_shown() {
+                    crate::config::ShowState::Hide
+                } else {
+                    crate::config::ShowState::Show
+                };
+                self.handle_config_input(crate::config::ConfigInput::StatusBarShowState(next))
+            }
             MenuAction::Undo => self.handle_undo(),
             MenuAction::Redo => self.handle_redo(),
             MenuAction::Cut => self.handle_clipboard(ClipboardAction::Cut),

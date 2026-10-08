@@ -47,6 +47,7 @@ impl IconCache {
         bundle!("edit-symbolic", 16);
         bundle!("show-symbolic", 16);
         bundle!("zen-symbolic", 18);
+        bundle!("settings-symbolic", 18);
         bundle!("outline-symbolic", 18);
         bundle!("outline-symbolic", 16);
         bundle!("search-vault-symbolic", 18);
