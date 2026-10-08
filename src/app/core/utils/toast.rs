@@ -4,11 +4,11 @@ use cosmic::widget::Toast;
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
-pub struct CedillaToast {
+pub struct PostillaToast {
     pub message: String,
 }
 
-impl CedillaToast {
+impl PostillaToast {
     pub fn new<T>(message: T) -> Self
     where
         T: ToString,
@@ -19,8 +19,8 @@ impl CedillaToast {
     }
 }
 
-impl From<CedillaToast> for Toast<crate::app::Message> {
-    fn from(toast: CedillaToast) -> Self {
+impl From<PostillaToast> for Toast<crate::app::Message> {
+    fn from(toast: PostillaToast) -> Self {
         Toast::new(toast.message).duration(Duration::from_secs(5))
     }
 }

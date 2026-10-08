@@ -1,7 +1,7 @@
 # Name of the application's binary.
-name := 'cedilla'
+name := 'postilla'
 # The unique ID of the application.
-appid := 'dev.mariinkys.Cedilla.Fork'
+appid := 'io.github.atraxsrc.Postilla'
 
 # Path to root file system, which defaults to `/`.
 rootdir := ''
@@ -79,7 +79,7 @@ deb *args:
 
 # Builds and installs the Debian package
 install-deb: deb
-    sudo apt install --reinstall ./{{ cargo-target-dir / 'debian' }}/cedilla-fork_*.deb
+    sudo apt install --reinstall ./{{ cargo-target-dir / 'debian' }}/postilla_*.deb
 
 # Vendor dependencies locally
 vendor:

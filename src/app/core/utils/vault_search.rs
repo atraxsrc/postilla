@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn finds_matches_in_notes() {
-        let dir = std::env::temp_dir().join(format!("cedilla-search-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("postilla-search-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         std::fs::write(dir.join("a.md"), "first line\nNeedle here\n").unwrap();
         std::fs::write(dir.join("b.txt"), "needle again").unwrap();

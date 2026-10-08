@@ -15,7 +15,7 @@ untitled = Untitled
 <#-- About Page -->
 repository = Repository
 support = Support
-donations = Donate
+based-on = Based on Cedilla
 
 <#-- Main App -->
 editor = Editor
@@ -57,7 +57,7 @@ light-highlighter = Light Highlighter Theme
 highlighter-theme-colors = Use highlighter theme colors
 highlighter-theme-colors-description = Paint the editor and code blocks with the background and text colors of the highlighter theme
 custom-themes = Custom highlighter themes
-custom-themes-info = Import your own highlighter themes: Cedilla RON themes, COSMIC Terminal color schemes (.ron) and TextMate/Sublime themes (.tmTheme). Files dropped in the themes folder are loaded on startup or after pressing reload.
+custom-themes-info = Import your own highlighter themes: Postilla RON themes, COSMIC Terminal color schemes (.ron) and TextMate/Sublime themes (.tmTheme). Files dropped in the themes folder are loaded on startup or after pressing reload.
 import-theme = Import theme…
 open-themes-folder = Themes folder
 reload-themes = Reload themes
@@ -79,7 +79,7 @@ window-background-description = Hex color (#rrggbb) for the whole window. Leave 
 <#-- Settings Context Page -->
 general = General
 open-vault = Use another folder as vault
-open-vault-info = Pick any existing folder and use it as the vault without moving anything. Useful to work on the notes of another Cedilla installation, e.g. the Flatpak one keeps its vault in ~/.var/app/dev.mariinkys.Cedilla/data/dev.mariinkys.Cedilla/vault
+open-vault-info = Pick any existing folder and use it as the vault without moving anything. Useful to work on the notes of a Cedilla installation, e.g. the Cedilla Flatpak keeps its vault in ~/.var/app/dev.mariinkys.Cedilla/data/dev.mariinkys.Cedilla/vault
 help-bar = Editor Help Bar
 status-bar = Status Bar
 move-vault = Move Vault
@@ -95,7 +95,7 @@ autosave-description = Save open files automatically after a pause in typing
 autosave-off = Off
 autosave-seconds = { $seconds }s
 sidebar = Sidebar
-tray-show = Show Cedilla
+tray-show = Show Postilla
 tray-quit = Quit
 apply = Apply
 more-info = More Info

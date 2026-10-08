@@ -226,7 +226,7 @@ impl AppModel {
             }
             Err(err) => {
                 eprintln!("Failed to paste image: {err}");
-                self.handle_add_toast(utils::CedillaToast::new(crate::fl!(
+                self.handle_add_toast(utils::PostillaToast::new(crate::fl!(
                     "no-image-clipboard"
                 )))
             }

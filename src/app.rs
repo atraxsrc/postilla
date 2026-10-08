@@ -8,10 +8,10 @@ use crate::app::core::project::ProjectNode;
 use crate::app::core::utils::search::SearchAction;
 use crate::app::core::utils::stats::DocStats;
 use crate::app::core::utils::vault_search::{VaultSearchAction, VaultSearchState};
-use crate::app::core::utils::{self, CedillaToast, Image};
+use crate::app::core::utils::{self, PostillaToast, Image};
 use crate::app::dialogs::{DialogPage, DialogState};
 use crate::config::{
-    AUTOSAVE_DELAYS, AppTheme, BoolState, CONFIG_VERSION, CedillaConfig, ConfigInput,
+    AUTOSAVE_DELAYS, AppTheme, BoolState, CONFIG_VERSION, PostillaConfig, ConfigInput,
     FrostedGlass, MIN_WINDOW_OPACITY, ShowState, ViewMode, autosave_labels,
 };
 use crate::key_binds::key_binds;
@@ -55,7 +55,7 @@ const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 /// single-instance D-Bus name and launcher entry. Keep it in sync with the
 /// `appid` in the `justfile`, `resources/app.desktop`,
 /// `resources/app.metainfo.xml` and the Flatpak manifest.
-pub const APP_ID: &str = "dev.mariinkys.Cedilla.Fork";
+pub const APP_ID: &str = "io.github.atraxsrc.Postilla";
 
 /// The application model stores app-specific state used to describe its interface and
 /// drive its logic.
@@ -83,13 +83,13 @@ pub struct AppModel {
     /// Application configuration handler
     config_handler: Option<cosmic::cosmic_config::Config>,
     /// Configuration data that persists between application runs.
-    config: CedillaConfig,
+    config: PostillaConfig,
     // Application Themes
     app_themes: Vec<String>,
     // Fonts available in the system
     system_fonts: Vec<String>,
     /// Editor and preview fonts
-    cedilla_font: Font,
+    postilla_font: Font,
     /// Syntax highlighting themes (built-in + user themes folder)
     syntax_themes: ThemeRegistry,
     /// Display names of the syntax themes, in registry order (for dropdowns)
@@ -161,7 +161,7 @@ pub enum Message {
     /// Callback for closing a toast
     CloseToast(ToastId),
     /// Ask to add new toast
-    AddToast(CedillaToast),
+    AddToast(PostillaToast),
     /// Opens the given URL in the browser
     LaunchUrl(String),
     /// Copies some data to the system clipboard
@@ -321,18 +321,22 @@ impl cosmic::Application for AppModel {
     fn init(core: cosmic::Core, flags: Self::Flags) -> (Self, Task<cosmic::Action<Self::Message>>) {
         // Create the about widget
         let about = About::default()
-            .name("Cedilla")
+            .name("Postilla")
             .icon(widget::icon::from_name(Self::APP_ID))
             .version(env!("CARGO_PKG_VERSION"))
             .links([
                 (fl!("repository"), REPOSITORY),
                 (fl!("support"), &format!("{}/issues", REPOSITORY)),
-                (fl!("donations"), "https://buymeacoffee.com/mariinkys"),
+                (fl!("based-on"), "https://github.com/mariinkys/cedilla"),
             ])
             .license(env!("CARGO_PKG_LICENSE"))
-            .author("mariinkys")
-            .developers([("mariinkys", "kysdev.owjga@aleeas.com")])
-            .comments("\"Pop Icons\" by System76 is licensed under CC-SA-4.0");
+            .author("Postilla contributors")
+            .developers([("Postilla contributors", REPOSITORY)])
+            .comments(
+                "Postilla is a fork of Cedilla by Alex Marín (mariinkys), GPL-3.0.\n\
+                 Markdown rendering by Frostmark (Mrmayman).\n\
+                 \"Pop Icons\" by System76 is licensed under CC-SA-4.0.",
+            );
 
         let font = if let Some(ref name) = flags.config.selected_font_family {
             let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
@@ -378,7 +382,7 @@ impl cosmic::Application for AppModel {
             config: flags.config,
             app_themes: vec![fl!("match-desktop"), fl!("dark"), fl!("light")],
             system_fonts: font_options,
-            cedilla_font: font,
+            postilla_font: font,
             syntax_themes,
             syntax_theme_names,
             selected_nav_path: None,
@@ -405,7 +409,7 @@ impl cosmic::Application for AppModel {
             app.open_vault_folder(&vault_path);
         } else {
             eprintln!("Vault not found, trying to fallback to default path");
-            let default_vault_path = PathBuf::from(CedillaConfig::default().vault_path);
+            let default_vault_path = PathBuf::from(PostillaConfig::default().vault_path);
 
             #[allow(clippy::collapsible_if)]
             if let Some(handler) = &app.config_handler {
@@ -740,14 +744,14 @@ impl cosmic::Application for AppModel {
                 preview,
                 panes,
                 view_mode,
-            } => cedilla_main_view(MainViewParams {
+            } => postilla_main_view(MainViewParams {
                 app_config: &self.config,
                 editor,
                 preview,
                 panes,
                 view_mode: *view_mode,
                 zen_mode: self.zen_mode,
-                font: self.cedilla_font,
+                font: self.postilla_font,
                 syntax_theme: self.active_syntax_theme(),
                 theme_colors: self.config.highlighter_theme_colors.is_yes(),
                 key_binds: &self.key_binds,
@@ -907,7 +911,7 @@ impl cosmic::Application for AppModel {
 impl AppModel {
     /// Updates the header and window titles.
     pub fn update_title(&mut self) -> Task<cosmic::Action<Message>> {
-        let window_title = String::from("Cedilla");
+        let window_title = String::from("Postilla");
 
         if let Some(id) = self.core.main_window_id() {
             self.set_window_title(window_title, id)
@@ -1403,7 +1407,7 @@ fn view_mode_model(active: ViewMode) -> segmented_button::SingleSelectModel {
 
 /// Everything the main view needs from the application model
 struct MainViewParams<'a> {
-    app_config: &'a CedillaConfig,
+    app_config: &'a PostillaConfig,
     editor: &'a EditorState,
     preview: &'a MarkdownPreview,
     panes: &'a pane_grid::State<PaneContent>,
@@ -1439,7 +1443,7 @@ fn card_class<'a>(colors: Option<(Option<Color>, Option<Color>)>) -> theme::Cont
 }
 
 /// View of the header of this screen
-fn cedilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
+fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
     let MainViewParams {
         app_config,
         editor,
@@ -1649,7 +1653,7 @@ fn cedilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                     let relative = path
                         .trim_start_matches(&*app_config.vault_path)
                         .trim_start_matches('/');
-                    text(format!("Cedilla Vault/{relative}")).size(12)
+                    text(format!("Vault/{relative}")).size(12)
                 } else {
                     text(path).size(12)
                 }

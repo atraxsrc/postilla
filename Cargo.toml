@@ -1,41 +1,42 @@
 [package]
-name = "cedilla"
+name = "postilla"
 version = "0.2.0"
 edition = "2024"
 license = "GPL-3.0"
-description = "A markdown text editor for the COSMIC™ desktop"
-repository = "https://github.com/mariinkys/cedilla"
+description = "Markdown notes for the COSMIC™ desktop"
+repository = "https://github.com/atraxsrc/postilla"
 
 [[bin]]
 path = "src/main.rs"
-name = "cedilla"
+name = "postilla"
 
 # Debian packaging, build with `just deb` (needs `cargo install cargo-deb`)
 [package.metadata.deb]
-name = "cedilla-fork"
-maintainer = "Cedilla Fork <cedilla-fork@localhost>"
-copyright = "2026, Alex Marín and Cedilla Fork contributors"
+name = "postilla"
+maintainer = "Postilla <postilla@localhost>"
+copyright = "2026, Alex Marín and Postilla contributors"
 license-file = ["LICENSE", "0"]
 extended-description = """\
-Cedilla Fork is a markdown note taking editor for the COSMIC desktop with a \
+Postilla is a markdown note taking editor for the COSMIC desktop with a \
 notes vault, live preview, editor / split / preview layouts, zen mode, \
 customizable syntax highlighting themes (tmTheme, COSMIC Terminal color \
-schemes, Cedilla RON themes), frosted glass window effect, outline, vault \
-wide search, autosave and HTML / PDF export.\
+schemes, RON themes), frosted glass window effect, outline, vault wide \
+search, autosave, tray icon and offline HTML / PDF export. \
+Postilla is a fork of Cedilla by Alex Marín (GPL-3.0).\
 """
 section = "editors"
 priority = "optional"
 depends = "$auto"
 assets = [
-    ["target/release/cedilla", "usr/bin/", "755"],
-    ["resources/app.desktop", "usr/share/applications/dev.mariinkys.Cedilla.Fork.desktop", "644"],
-    ["resources/app.metainfo.xml", "usr/share/metainfo/dev.mariinkys.Cedilla.Fork.metainfo.xml", "644"],
-    ["resources/icons/hicolor/scalable/apps/icon.svg", "usr/share/icons/hicolor/scalable/apps/dev.mariinkys.Cedilla.Fork.svg", "644"],
-    ["resources/icons/hicolor/symbolic/apps/icon-symbolic.svg", "usr/share/icons/hicolor/symbolic/apps/dev.mariinkys.Cedilla.Fork-symbolic.svg", "644"],
-    ["README.md", "usr/share/doc/cedilla-fork/README.md", "644"],
-    ["resources/themes/README.md", "usr/share/doc/cedilla-fork/themes/README.md", "644"],
-    ["resources/themes/example-cedilla-theme.ron", "usr/share/doc/cedilla-fork/themes/example-cedilla-theme.ron", "644"],
-    ["resources/themes/example-cosmic-term.ron", "usr/share/doc/cedilla-fork/themes/example-cosmic-term.ron", "644"],
+    ["target/release/postilla", "usr/bin/", "755"],
+    ["resources/app.desktop", "usr/share/applications/io.github.atraxsrc.Postilla.desktop", "644"],
+    ["resources/app.metainfo.xml", "usr/share/metainfo/io.github.atraxsrc.Postilla.metainfo.xml", "644"],
+    ["resources/icons/hicolor/scalable/apps/icon.svg", "usr/share/icons/hicolor/scalable/apps/io.github.atraxsrc.Postilla.svg", "644"],
+    ["resources/icons/hicolor/symbolic/apps/icon-symbolic.svg", "usr/share/icons/hicolor/symbolic/apps/io.github.atraxsrc.Postilla-symbolic.svg", "644"],
+    ["README.md", "usr/share/doc/postilla/README.md", "644"],
+    ["resources/themes/README.md", "usr/share/doc/postilla/themes/README.md", "644"],
+    ["resources/themes/example-postilla-theme.ron", "usr/share/doc/postilla/themes/example-postilla-theme.ron", "644"],
+    ["resources/themes/example-cosmic-term.ron", "usr/share/doc/postilla/themes/example-cosmic-term.ron", "644"],
 ]
 
 [dependencies]

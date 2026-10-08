@@ -797,45 +797,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cedilla"
-version = "0.2.0"
-dependencies = [
- "anywho",
- "arboard",
- "base64 0.23.1",
- "dirs 7.0.0",
- "dissimilar",
- "enumflags2",
- "font-kit",
- "frostmark",
- "futures-util",
- "grep",
- "i18n-embed",
- "i18n-embed-fl",
- "icu_collator",
- "icu_locale",
- "ignore",
- "image",
- "jiff",
- "ksni",
- "libcosmic",
- "notify",
- "open",
- "percent-encoding",
- "pulldown-cmark",
- "regex",
- "reqwest",
- "resvg 0.45.1",
- "ron",
- "rust-embed",
- "serde",
- "slotmap",
- "tokio",
- "url",
- "widgets",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5446,6 +5407,45 @@ checksum = "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
 dependencies = [
  "cobs",
  "serde",
+]
+
+[[package]]
+name = "postilla"
+version = "0.2.0"
+dependencies = [
+ "anywho",
+ "arboard",
+ "base64 0.23.1",
+ "dirs 7.0.0",
+ "dissimilar",
+ "enumflags2",
+ "font-kit",
+ "frostmark",
+ "futures-util",
+ "grep",
+ "i18n-embed",
+ "i18n-embed-fl",
+ "icu_collator",
+ "icu_locale",
+ "ignore",
+ "image",
+ "jiff",
+ "ksni",
+ "libcosmic",
+ "notify",
+ "open",
+ "percent-encoding",
+ "pulldown-cmark",
+ "regex",
+ "reqwest",
+ "resvg 0.45.1",
+ "ron",
+ "rust-embed",
+ "serde",
+ "slotmap",
+ "tokio",
+ "url",
+ "widgets",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 use crate::app::core::project::ProjectNode;
-use crate::app::core::utils::{self, CedillaToast};
+use crate::app::core::utils::{self, PostillaToast};
 use crate::app::{AppModel, Message, State};
 use cosmic::prelude::*;
 use cosmic::widget::segmented_button;
@@ -33,7 +33,7 @@ impl AppModel {
 
         if let Err(e) = delete_result {
             editor.ignore_next_external_change = false;
-            return self.handle_add_toast(CedillaToast::new(e));
+            return self.handle_add_toast(PostillaToast::new(e));
         }
 
         self.remove_nav_node(&path);
@@ -86,7 +86,7 @@ impl AppModel {
         }
 
         if new_path.exists() {
-            return self.handle_add_toast(CedillaToast::new(format!(
+            return self.handle_add_toast(PostillaToast::new(format!(
                 "A file or folder named {:?} already exists",
                 new_name
             )));
@@ -95,7 +95,7 @@ impl AppModel {
         editor.ignore_next_external_change = true;
         if let Err(e) = std::fs::rename(&old_path, &new_path) {
             editor.ignore_next_external_change = false;
-            return self.handle_add_toast(CedillaToast::new(e));
+            return self.handle_add_toast(PostillaToast::new(e));
         }
 
         self.rename_nav_node(&old_path, &new_path, &new_name);
@@ -145,7 +145,7 @@ impl AppModel {
         editor.ignore_next_external_change = true;
         if let Err(e) = std::fs::rename(&source_path, &dest) {
             editor.ignore_next_external_change = false;
-            return self.handle_add_toast(CedillaToast::new(e));
+            return self.handle_add_toast(PostillaToast::new(e));
         }
 
         let target_entity = self.nav_model.iter().find(|&id| {
@@ -248,7 +248,7 @@ impl AppModel {
 
                 Task::done(cosmic::action::app(Message::NewFile))
             }
-            Err(e) => self.handle_add_toast(CedillaToast::new(e)),
+            Err(e) => self.handle_add_toast(PostillaToast::new(e)),
         }
     }
 }

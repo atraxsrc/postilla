@@ -19,24 +19,24 @@ pub enum TrayEvent {
     Quit,
 }
 
-struct CedillaTray {
+struct PostillaTray {
     sender: mpsc::UnboundedSender<TrayEvent>,
     icons: Vec<Icon>,
 }
 
-impl CedillaTray {
+impl PostillaTray {
     fn emit(&self, event: TrayEvent) {
         let _ = self.sender.send(event);
     }
 }
 
-impl Tray for CedillaTray {
+impl Tray for PostillaTray {
     fn id(&self) -> String {
         crate::app::APP_ID.to_string()
     }
 
     fn title(&self) -> String {
-        "Cedilla".to_string()
+        "Postilla".to_string()
     }
 
     fn icon_name(&self) -> String {
@@ -82,7 +82,7 @@ pub fn subscription() -> Subscription<TrayEvent> {
         cosmic::iced::stream::channel(8, |mut output: iced_mpsc::Sender<TrayEvent>| async move {
             let (sender, mut receiver) = mpsc::unbounded_channel();
 
-            let tray = CedillaTray {
+            let tray = PostillaTray {
                 sender,
                 icons: render_icons(),
             };
@@ -154,4 +154,21 @@ fn render_icons() -> Vec<Icon> {
             })
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn app_icon_rasterizes() {
+        let icons = render_icons();
+        assert_eq!(icons.len(), 4);
+        for icon in &icons {
+            assert_eq!(icon.data.len(), (icon.width * icon.height * 4) as usize);
+            // the glyph must actually paint something
+            let painted = icon.data.chunks(4).filter(|px| px[0] > 0).count();
+            assert!(painted > (icon.width * icon.height / 20) as usize);
+        }
+    }
 }

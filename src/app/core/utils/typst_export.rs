@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 //! Offline PDF export: the markdown document is translated to Typst markup
-//! and compiled with the Typst engine that already ships with Cedilla.
+//! and compiled with the Typst engine that already ships with Postilla.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

@@ -3,7 +3,7 @@
 use crate::app::core::editor::{EditorScrollState, EditorSearchState, EditorState};
 use crate::app::core::history::HistoryState;
 use crate::app::core::preview::MarkdownPreview;
-use crate::app::core::utils::{self, CedillaToast};
+use crate::app::core::utils::{self, PostillaToast};
 use crate::app::{AppModel, Message, State, editor_scrollable_id, preview_scrollable_id};
 use crate::app::{DiscardChangesAction, create_default_panes};
 use crate::config::{BoolState, ViewMode};
@@ -121,7 +121,7 @@ impl AppModel {
 
         // create the file on disk
         if let Err(e) = std::fs::write(&file_path, "") {
-            return self.handle_add_toast(CedillaToast::new(e));
+            return self.handle_add_toast(PostillaToast::new(e));
         }
 
         self.insert_file_node(&file_path, &dir);
@@ -186,7 +186,7 @@ impl AppModel {
 
         // create the folder on disk
         if let Err(e) = std::fs::create_dir(&folder_path) {
-            return self.handle_add_toast(CedillaToast::new(e));
+            return self.handle_add_toast(PostillaToast::new(e));
         }
 
         // insert folder to navbar
@@ -298,7 +298,7 @@ impl AppModel {
 
                 Task::none()
             }
-            Err(e) => self.handle_add_toast(CedillaToast::new(e)),
+            Err(e) => self.handle_add_toast(PostillaToast::new(e)),
         }
     }
 
@@ -319,12 +319,12 @@ impl AppModel {
                     if std::mem::take(&mut self.silent_save) {
                         Task::none()
                     } else {
-                        self.handle_add_toast(CedillaToast::new(crate::fl!("file-saved")))
+                        self.handle_add_toast(PostillaToast::new(crate::fl!("file-saved")))
                     }
                 }
                 Err(e) => {
                     self.silent_save = false;
-                    self.handle_add_toast(CedillaToast::new(e))
+                    self.handle_add_toast(PostillaToast::new(e))
                 }
             }
         } else {

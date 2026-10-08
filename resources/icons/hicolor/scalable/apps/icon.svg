@@ -1,46 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<svg
-    width="128"
-    height="128"
-    viewBox="0 0 128 128"
-    xmlns="http://www.w3.org/2000/svg"
->
-
-  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#paperGrad)" />
-
-  <g transform="translate(67 57) scale(1.12)">
-    <path
-            d="M20 -20 A28 28 0 1 0 20 20 L10 10 A18 18 0 1 1 10 -10 Z"
-            fill="#000000"
-            opacity="0.15"
-            transform="translate(1.5 1.5)"
-        />
-    <path
-            d="M20 -20 A28 28 0 1 0 20 20 L10 10 A18 18 0 1 1 10 -10 Z"
-            fill="#2A2A2A"
-        />
-    <path
-            d="M-2 24 C-2 32 12 32 12 42 C12 50 -8 50 -12 38"
-            stroke="#2A2A2A"
-            stroke-width="6"
-            fill="none"
-            stroke-linecap="round"
-        />
-
-  </g>
-
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Postilla: a Roman capital P, ink on a dark parchment-edged card -->
   <defs>
-    <linearGradient
-            id="paperGrad"
-            x1="0"
-            y1="8"
-            x2="0"
-            y2="120"
-            gradientUnits="userSpaceOnUse"
-        >
-      <stop offset="0%" stop-color="#F9D46B" />
-      <stop offset="100%" stop-color="#E6AE2F" />
+    <linearGradient id="inkGrad" x1="0" y1="8" x2="0" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2E3F63" />
+      <stop offset="100%" stop-color="#17213A" />
+    </linearGradient>
+    <linearGradient id="paperGrad" x1="0" y1="20" x2="0" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F7EBCB" />
+      <stop offset="100%" stop-color="#E8D3A2" />
     </linearGradient>
   </defs>
-
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#inkGrad)" />
+  <!-- margin rule, the place where a postilla is written -->
+  <path d="M28 30 V98" stroke="#F7EBCB" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round" />
+  <!-- shadow -->
+  <g transform="translate(2 2)" fill="#000000" opacity="0.25">
+    <path d="M44 26 H78 C95 26 104 35 104 48 C104 61 95 70 78 70 H60 V96 H70 V104 H38 V96 H48 V34 H38 V26 Z" />
+  </g>
+  <!-- the P -->
+  <path d="M44 26 H78 C95 26 104 35 104 48 C104 61 95 70 78 70 H60 V96 H70 V104 H38 V96 H48 V34 H38 V26 Z" fill="url(#paperGrad)" />
+  <!-- bowl counter -->
+  <path d="M60 35 H77 C87 35 92 41 92 48 C92 55 87 61 77 61 H60 Z" fill="url(#inkGrad)" />
 </svg>

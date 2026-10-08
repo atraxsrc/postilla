@@ -1,10 +1,10 @@
 [Desktop Entry]
-Name=Cedilla Fork
+Name=Postilla
 Comment=A markdown text editor
 Comment[cs]=Editor textu Markdown
 Type=Application
-Icon=dev.mariinkys.Cedilla.Fork
-Exec=cedilla %F
+Icon=io.github.atraxsrc.Postilla
+Exec=postilla %F
 Terminal=false
 StartupNotify=true
 Categories=COSMIC;Utility;TextTools;Office;TextEditor;

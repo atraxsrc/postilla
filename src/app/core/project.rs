@@ -30,7 +30,7 @@ impl AppModel {
                 .nav_model
                 .insert()
                 .icon(node.icon(18))
-                .text("Cedilla Vault")
+                .text("Vault")
                 .data(node)
                 .id();
 

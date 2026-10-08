@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 use crate::app::context_page::ContextPage;
-use crate::app::core::utils::CedillaToast;
+use crate::app::core::utils::PostillaToast;
 use crate::app::{AppModel, Message};
 use crate::fl;
 use cosmic::iced::core::keyboard::{Key, Modifiers};
@@ -14,7 +14,7 @@ impl AppModel {
         Task::none()
     }
 
-    pub fn handle_add_toast(&mut self, toast: CedillaToast) -> Task<cosmic::Action<Message>> {
+    pub fn handle_add_toast(&mut self, toast: PostillaToast) -> Task<cosmic::Action<Message>> {
         self.toasts.push(toast.into()).map(cosmic::action::app)
     }
 
@@ -55,7 +55,7 @@ impl AppModel {
 
     pub fn handle_copy_to_clipboard(&mut self, content: String) -> Task<cosmic::Action<Message>> {
         let write = self.clipboard_write(content);
-        let toast = self.handle_add_toast(CedillaToast::new(fl!("copied-to-clipboard")));
+        let toast = self.handle_add_toast(PostillaToast::new(fl!("copied-to-clipboard")));
         write.chain(toast)
     }
 

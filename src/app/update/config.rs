@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use crate::app::core::utils::{self, CedillaToast};
+use crate::app::core::utils::{self, PostillaToast};
 use crate::app::{AppModel, Message};
 use crate::config::{
-    AUTOSAVE_DELAYS, AppTheme, CedillaConfig, ConfigInput, FrostedGlass, MIN_WINDOW_OPACITY,
+    AUTOSAVE_DELAYS, AppTheme, PostillaConfig, ConfigInput, FrostedGlass, MIN_WINDOW_OPACITY,
     SyntaxThemeId,
 };
 use crate::fl;
@@ -20,7 +20,7 @@ impl AppModel {
     /// Applies a config change via the handler, falling back to an in-memory update if the handler fails or is missing.
     fn apply_config<F>(&mut self, updater: F) -> Task<cosmic::Action<Message>>
     where
-        F: FnOnce(&mut CedillaConfig, Option<&cosmic::cosmic_config::Config>) -> Result<(), String>,
+        F: FnOnce(&mut PostillaConfig, Option<&cosmic::cosmic_config::Config>) -> Result<(), String>,
     {
         if let Some(handler) = &self.config_handler {
             if let Err(err) = updater(&mut self.config, Some(handler)) {
@@ -315,7 +315,7 @@ impl AppModel {
                 let path = match result {
                     Ok(path) => std::path::PathBuf::from(path),
                     Err(err) => {
-                        return self.handle_add_toast(CedillaToast::new(fl!(
+                        return self.handle_add_toast(PostillaToast::new(fl!(
                             "theme-import-failed",
                             error = err
                         )));
@@ -353,9 +353,9 @@ impl AppModel {
                             Ok(())
                         });
 
-                        self.handle_add_toast(CedillaToast::new(fl!("theme-imported", name = name)))
+                        self.handle_add_toast(PostillaToast::new(fl!("theme-imported", name = name)))
                     }
-                    Err(err) => self.handle_add_toast(CedillaToast::new(fl!(
+                    Err(err) => self.handle_add_toast(PostillaToast::new(fl!(
                         "theme-import-failed",
                         error = err.to_string()
                     ))),
@@ -374,7 +374,7 @@ impl AppModel {
                     // TODO: Is this the only way we can do this?
                     let static_name: &'static str = Box::leak(name.clone().into_boxed_str());
 
-                    self.cedilla_font = Font {
+                    self.postilla_font = Font {
                         family: cosmic::iced::font::Family::Name(static_name),
                         weight: cosmic::iced::font::Weight::Normal,
                         stretch: cosmic::iced::font::Stretch::Normal,
@@ -396,7 +396,7 @@ impl AppModel {
                 }
             }
             ConfigInput::ResetFont => {
-                self.cedilla_font = Font::DEFAULT;
+                self.postilla_font = Font::DEFAULT;
 
                 self.apply_config(|config, handler| {
                     if let Some(h) = handler {

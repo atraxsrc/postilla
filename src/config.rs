@@ -15,7 +15,7 @@ pub const CONFIG_VERSION: u64 = 1;
 
 #[derive(Debug, Clone, CosmicConfigEntry, Eq, PartialEq)]
 #[version = 1]
-pub struct CedillaConfig {
+pub struct PostillaConfig {
     pub app_theme: AppTheme,
     pub vault_path: String,
     pub show_helper_header_bar: ShowState,
@@ -44,7 +44,7 @@ pub struct CedillaConfig {
     pub autosave_delay: u32,
 }
 
-impl Default for CedillaConfig {
+impl Default for PostillaConfig {
     fn default() -> Self {
         let vault_path = dirs::data_dir()
             .unwrap()
@@ -78,7 +78,7 @@ impl Default for CedillaConfig {
     }
 }
 
-impl CedillaConfig {
+impl PostillaConfig {
     pub fn config_handler() -> Option<Config> {
         Config::new(crate::app::AppModel::APP_ID, CONFIG_VERSION).ok()
     }
@@ -86,12 +86,12 @@ impl CedillaConfig {
     pub fn config() -> Self {
         match Self::config_handler() {
             Some(config_handler) => {
-                CedillaConfig::get_entry(&config_handler).unwrap_or_else(|(error, config)| {
+                PostillaConfig::get_entry(&config_handler).unwrap_or_else(|(error, config)| {
                     eprintln!("Error whilst loading config: {error:#?}");
                     config
                 })
             }
-            None => CedillaConfig::default(),
+            None => PostillaConfig::default(),
         }
     }
 
@@ -315,7 +315,7 @@ impl BoolState {
 
 /// Identifier of a syntax highlighting theme, see [`crate::syntax_theme`].
 ///
-/// Older versions of Cedilla stored the index of an `iced::highlighter::Theme`;
+/// Older versions of Postilla stored the index of an `iced::highlighter::Theme`;
 /// those values are still accepted when deserializing.
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct SyntaxThemeId(pub String);

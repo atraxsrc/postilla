@@ -2,20 +2,20 @@
 
 use std::path::PathBuf;
 
-use crate::config::CedillaConfig;
+use crate::config::PostillaConfig;
 use cosmic::cosmic_config;
 
 /// Flags given to our COSMIC application to use in it's "init" function.
 #[derive(Clone, Debug)]
 pub struct Flags {
     pub config_handler: Option<cosmic_config::Config>,
-    pub config: CedillaConfig,
+    pub config: PostillaConfig,
     pub system_fonts: Vec<String>,
     pub open_with_file: Option<PathBuf>,
 }
 
 pub fn flags() -> Flags {
-    let (config_handler, config) = (CedillaConfig::config_handler(), CedillaConfig::config());
+    let (config_handler, config) = (PostillaConfig::config_handler(), PostillaConfig::config());
     let system_fonts = load_system_fonts();
     let open_with_file = check_open_with_file();
 

@@ -14,4 +14,4 @@ pub mod vault_search;
 
 pub use images::Image;
 pub use markdown::SelectionAction;
-pub use toast::CedillaToast;
+pub use toast::PostillaToast;

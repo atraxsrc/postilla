@@ -1,7 +1,7 @@
-// A Cedilla syntax highlighting theme.
+// A Postilla syntax highlighting theme.
 // Every field is optional except `name`; colors are "#rrggbb" or "#rrggbbaa".
 (
-    name: "Example Cedilla Theme",
+    name: "Example Postilla Theme",
     // Editor / code block colors
     background: "#1e1e2e",
     foreground: "#cdd6f4",

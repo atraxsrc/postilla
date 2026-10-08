@@ -1,120 +1,73 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
-  <id>dev.mariinkys.Cedilla.Fork</id>
-  <developer id="dev.mariinkys">
-    <name>mariinkys</name>
+  <id>io.github.atraxsrc.Postilla</id>
+  <developer id="io.github.atraxsrc">
+    <name>Postilla contributors</name>
   </developer>
-  <url type="homepage">https://github.com/mariinkys/cedilla</url>
-  <url type="bugtracker">https://github.com/mariinkys/cedilla/issues</url>
-  <url type="donation">https://buymeacoffee.com/mariinkys</url>
-  <url type="vcs-browser">https://github.com/mariinkys/cedilla</url>
+  <url type="homepage">https://github.com/atraxsrc/postilla</url>
+  <url type="bugtracker">https://github.com/atraxsrc/postilla/issues</url>
+  <url type="vcs-browser">https://github.com/atraxsrc/postilla</url>
 
-  <name>Cedilla Fork</name>
-  <summary>Markdown Text Editor</summary>
-  <summary xml:lang="cs">Editor textu Markdown</summary>
+  <name>Postilla</name>
+  <summary>Markdown notes for the COSMIC desktop</summary>
 
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-only</project_license>
 
   <description>
-    <p
-        >Cedilla is a simple and focused Markdown text editor designed for writing without
-      distractions. Whether you're taking notes, drafting documentation, or writing blog posts,
-      Cedilla provides a clean and intuitive environment for working with plain text and
-      Markdown.</p>
-    <p
-            xml:lang="cs"
-        >Cedilla je jednoduchý editor textu Markdown, navržený pro psaní bez zbytečného
-      rozptylování. Ať už si děláte poznámky, připravujete dokumentaci nebo píšete blogové příspěvky,
-      Cedilla nabízí čisté a intuitivní prostředí pro práci s prostým textem a také
-      Markdownem.</p>
+    <p>Postilla is a markdown note taking editor for the COSMIC™ desktop: a vault of
+      notes, a live preview, and the tools you expect from a notes app, all offline.</p>
     <ul>
-      <li>Clean and minimal writing interface</li>
-      <li
-                xml:lang="cs"
-            >Čisté a minimalistické uživatelské rozhraní pro psaní</li>
-      <li>Live Markdown preview</li>
-      <li xml:lang="cs">Živý náhled Markdownu</li>
-      <li>Fast and lightweight</li>
-      <li xml:lang="cs">Rychlý a lehký</li>
-      <li>Works completely offline</li>
-      <li xml:lang="cs">Funguje zcela offline</li>
-      <li>Typst support inside code blocks, for math...</li>
-      <li xml:lang="cs">Podpora Typst uvnitř bloků kódu, pro matematiku...</li>
+      <li>Editor only, split and preview only layouts, plus a zen mode</li>
+      <li>Outline of the current note and full text search across the vault</li>
+      <li>Autosave, cut/copy/paste everywhere, right click editing menu</li>
+      <li>Customizable syntax highlighting: TextMate themes, COSMIC Terminal color schemes and simple RON themes</li>
+      <li>Frosted glass window with adjustable opacity and background color</li>
+      <li>Export to PDF (offline, rendered with Typst) and HTML</li>
+      <li>Typst math and Mermaid diagrams inside code blocks</li>
+      <li>Tray icon on the panel</li>
     </ul>
-    <p
-        >This app has been developed with libcosmic for the COSMIC™ desktop, and issues may occur on
-      other platforms</p>
-    <p
-            xml:lang="cs"
-        >Tato aplikace byla vyvinuta pomocí libcosmic pro prostředí COSMIC™. Na jiných platformách
-      mohou nastat problémy.</p>
+    <p>Postilla is a fork of Cedilla by Alex Marín (mariinkys), released under the GPL-3.0.
+      It is developed with libcosmic for the COSMIC™ desktop, and issues may occur on other
+      platforms.</p>
   </description>
 
   <icon type="remote" height="256" width="256">
-    https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/icons/hicolor/scalable/apps/icon.svg</icon>
-  <launchable type="desktop-id">dev.mariinkys.Cedilla.Fork.desktop</launchable>
+    https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/icons/hicolor/scalable/apps/icon.svg</icon>
+  <launchable type="desktop-id">io.github.atraxsrc.Postilla.desktop</launchable>
   <content_rating type="oars-1.1" />
 
   <provides>
     <id>com.system76.CosmicApplication</id>
-    <binary>cedilla</binary>
+    <binary>postilla</binary>
   </provides>
 
   <screenshots>
     <screenshot type="default">
       <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/main-light.png</image>
-      <caption>Main Page (Light)</caption>
-      <caption xml:lang="cs">Hlavní stránka (Světlý režim)</caption>
-    </screenshot>
-    <screenshot>
-      <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/main-dark.png</image>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/main-dark.png</image>
       <caption>Main Page (Dark)</caption>
-      <caption xml:lang="cs">Hlavní stránka (Tmavý režim)</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/other-light.png</image>
-      <caption>Features Showcase (Light)</caption>
-      <caption xml:lang="cs">Ukázka funkcí (Světlý režim)</caption>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/main-light.png</image>
+      <caption>Main Page (Light)</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/other-dark.png</image>
-      <caption>Features Showcase (Dark)</caption>
-      <caption xml:lang="cs">Ukázka funkcí (Tmavý režim)</caption>
-    </screenshot>
-    <screenshot>
-      <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/typst-light.png</image>
-      <caption>Typst Support (Light)</caption>
-      <caption xml:lang="cs">Podpora Typst (Světlý režim)</caption>
-    </screenshot>
-    <screenshot>
-      <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/typst-dark.png</image>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/typst-dark.png</image>
       <caption>Typst Support (Dark)</caption>
-      <caption xml:lang="cs">Podpora Typst (Tmavý režim)</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/mermaid-light.png</image>
-      <caption>Mermaid Support (Light)</caption>
-      <caption xml:lang="cs">Podpora Mermaid (Světlý režim)</caption>
-    </screenshot>
-    <screenshot>
-      <image>
-        https://raw.githubusercontent.com/mariinkys/cedilla/main/resources/screenshots/mermaid-dark.png</image>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/mermaid-dark.png</image>
       <caption>Mermaid Support (Dark)</caption>
-      <caption xml:lang="cs">Podpora Mermaid (Tmavý režim)</caption>
     </screenshot>
   </screenshots>
 
   <branding>
-    <color type="primary" scheme_preference="light">#0F766E</color>
-    <color type="primary" scheme_preference="dark">#14B8A6</color>
+    <color type="primary" scheme_preference="light">#2E3F63</color>
+    <color type="primary" scheme_preference="dark">#E8D3A2</color>
   </branding>
 
   <requires>
@@ -146,143 +99,22 @@
     <keyword>Documentation</keyword>
     <keyword>Markup</keyword>
     <keyword>Preview</keyword>
-
-    <keyword xml:lang="cs">Psaní</keyword>
-    <keyword xml:lang="cs">Poznámky</keyword>
-    <keyword xml:lang="cs">Dokumentace</keyword>
-    <keyword xml:lang="cs">Náhled</keyword>
   </keywords>
 
   <releases>
     <release version="0.2.0" date="2026-10-08">
         <description>
-            <p>Fork release with its own application id so it can be installed next to Cedilla</p>
-            <p>Added cut, copy, paste and select all to the Edit menu and a right click menu on the editor</p>
-            <p>Added editor only, split and preview only layouts and a zen mode</p>
-            <p>Added customizable syntax highlighting themes: tmTheme, COSMIC Terminal color schemes and Cedilla RON themes</p>
-            <p>Added frosted glass window effect and window opacity settings</p>
-            <p>Added document outline, search across the vault, autosave and HTML export</p>
-            <p>Added strikethrough, quote, table and date/time formatting, word count and reading time</p>
-            <p>Added "Use another folder as vault"</p>
+            <p>First Postilla release, forked from Cedilla 0.1.13</p>
+            <p>Cut, copy, paste and select all in the Edit menu and a right click menu on the editor</p>
+            <p>Editor only, split and preview only layouts and a zen mode</p>
+            <p>Customizable syntax highlighting themes: tmTheme, COSMIC Terminal color schemes and RON themes</p>
+            <p>Frosted glass window effect, window opacity and background color settings</p>
+            <p>Document outline, search across the vault, autosave and HTML export</p>
+            <p>Offline PDF export rendered with Typst</p>
+            <p>Tray icon on the panel</p>
+            <p>Strikethrough, quote, table and date/time formatting, word count and reading time</p>
+            <p>Use any existing folder as the vault</p>
         </description>
-    </release>
-    <release version="0.1.13" date="2026-10-03">
-        <description>
-            <p>Added Mermaid Diagrams support</p>
-            <p>Added interactive checkbox support to the preview pane</p>
-            <p>Fixed issue that triggered save confirmation dialog when it shouldn't</p>
-            <p>Improved performance on documents with large codeblocks</p>
-            <p>Refactored Typst support approach</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.12" date="2026-09-19">
-        <description>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.11" date="2026-08-15">
-        <description>
-            <p>Added image pasting support</p>
-            <p>Improved message shown when images do not load</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.10" date="2026-08-09">
-        <description>
-            <p>Added copy button to codeblocks on Preview pane</p>
-            <p>Added simplified chinese localization</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.9" date="2026-07-25">
-        <description>
-            <p>Fix carriage return behavior</p>
-            <p>Implement Ctrl+Backspace and Ctrl+Shfit+Backspace</p>
-            <p>Fix duplicate IME commits on Gnome</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.8" date="2026-07-04">
-        <description>
-            <p>Dialogs can now be dismissed using the Escape Key</p>
-            <p>Other fixes and improvments</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.7" date="2026-05-05">
-        <description>
-            <p>Fixed a bug that prevented Open with Cedilla from working</p>
-            <p>Updated translations</p>
-            <p>Other fixes and improvments</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.6" date="2026-03-31">
-        <description>
-            <p>Preserve panes state when changing file</p>
-            <p>Watch for external file changes on the currently open file</p>
-            <p>Other fixes and improvments</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.5" date="2026-03-30">
-        <description>
-            <p>Improved heading weight handling</p>
-            <p>Fixed weird scroll offset when using Undo and Redo</p>
-            <p>Renderer changes better match preview and editor panes</p>
-            <p>Improved scroll sync behavior</p>
-            <p>Improved app cursor behavior</p>
-            <p>Added Brazilian Portuguese translation</p>
-            <p>Added Swedish translation</p>
-            <p>Improved Turkish translation</p>
-            <p>Other fixes and improvments</p>
-            <p>Updated dependencies</p>
-        </description>
-    </release>
-    <release version="0.1.4" date="2026-03-23">
-        <description>
-            <p>Added a Search feature</p>
-            <p>Added a Formula button to the headerbar</p>
-            <p>Allow the app to be closed using Super+Q in COSMIC</p>
-            <p>Improved Turkish translation</p>
-            <p>Other fixes and improvments</p>
-        </description>
-    </release>
-    <release version="0.1.3" date="2026-03-19">
-      <description>
-            <p>Added Typst support to codeblocks</p>
-            <p>Added Font selection capabilities</p>
-            <p>Fixed hot reloading of theme in Flatpak</p>
-            <p
-                >Fixed images rendering as a block (not being able to have images one next to another one)</p>
-            <p>Improved czech translation</p>
-            <p>Other fixes and improvments</p>
-      </description>
-    </release>
-    <release version="0.1.2" date="2026-03-15">
-        <description>
-            <p
-                >Fixed issue that prevented the config from getting saved on COSMIC (breaking the app)</p>
-            <p
-                >Fixed issue with paths and filenames with non-ASCII characters and spaces</p>
-            <p>Added turkish translations</p>
-            <p>Fixed issue that prevented the menubar from working on GNOME</p>
-        </description>
-    </release>
-    <release version="0.1.1" date="2026-03-14">
-        <description>
-            <p>Changed the default window size</p>
-            <p>Improved handling of list elements</p>
-            <p>Added permissions warning to Move Vault feature</p>
-            <p
-                >Allow opening vault location in File Explorer from Settings page</p>
-        </description>
-    </release>
-    <release version="0.1.0" date="2026-03-13">
-      <description>
-        <p>Application Release</p>
-      </description>
     </release>
   </releases>
 </component>

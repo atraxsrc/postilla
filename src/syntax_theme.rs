@@ -2,11 +2,11 @@
 
 //! Syntax highlighting theme registry.
 //!
-//! Cedilla ships the syntect default themes and loads user themes from the
+//! Postilla ships the syntect default themes and loads user themes from the
 //! themes folder. Three formats are supported and detected automatically:
 //!
-//! - **Cedilla RON themes**: a flat list of named colors (`keyword`, `string`,
-//!   `heading`...), see `resources/themes/example-cedilla-theme.ron`.
+//! - **Postilla RON themes**: a flat list of named colors (`keyword`, `string`,
+//!   `heading`...), see `resources/themes/example-postilla-theme.ron`.
 //! - **COSMIC Terminal color schemes**: the RON files COSMIC Terminal
 //!   imports/exports. The 16 ANSI colors are mapped onto syntax scopes.
 //! - **TextMate / Sublime `.tmTheme`** files.
@@ -111,8 +111,8 @@ impl ThemeRegistry {
                     include_str!("../resources/themes/README.md"),
                 ),
                 (
-                    "example-cedilla-theme.ron",
-                    include_str!("../resources/themes/example-cedilla-theme.ron"),
+                    "example-postilla-theme.ron",
+                    include_str!("../resources/themes/example-postilla-theme.ron"),
                 ),
                 (
                     "example-cosmic-term.ron",
@@ -254,7 +254,7 @@ pub fn load_theme_file(path: &Path) -> Result<(String, Theme), anywho::Error> {
     parse_ron_theme(&text, &fallback_name)
 }
 
-/// Parses a RON theme (Cedilla or COSMIC Terminal format).
+/// Parses a RON theme (Postilla or COSMIC Terminal format).
 pub fn parse_ron_theme(text: &str, fallback_name: &str) -> Result<(String, Theme), anywho::Error> {
     // COSMIC Terminal (and most hand written themes) write optional values
     // without `Some(...)`, so accept both forms.
@@ -273,7 +273,7 @@ pub fn parse_ron_theme(text: &str, fallback_name: &str) -> Result<(String, Theme
     let theme = if raw.is_terminal_scheme() {
         raw.into_terminal_theme(&name)?
     } else {
-        raw.into_cedilla_theme(&name)?
+        raw.into_postilla_theme(&name)?
     };
 
     Ok((name, theme))
@@ -301,7 +301,7 @@ struct RonTheme {
     bright: Option<Ansi>,
     dim: Option<Ansi>,
 
-    // Cedilla theme fields
+    // Postilla theme fields
     comment: Option<String>,
     keyword: Option<String>,
     string: Option<String>,
@@ -353,7 +353,7 @@ impl Ansi {
     }
 }
 
-/// Scope selectors for each Cedilla color slot.
+/// Scope selectors for each Postilla color slot.
 const SLOT_SCOPES: &[(&str, &str, FontStyle)] = &[
     ("comment", "comment, punctuation.definition.comment", FontStyle::ITALIC),
     (
@@ -471,7 +471,7 @@ impl RonTheme {
         }
     }
 
-    fn into_cedilla_theme(self, name: &str) -> Result<Theme, anywho::Error> {
+    fn into_postilla_theme(self, name: &str) -> Result<Theme, anywho::Error> {
         let mut builder = ThemeBuilder::new(name);
         builder.background = parse_opt(self.background.as_deref())?;
         builder.foreground = parse_opt(self.foreground.as_deref())?;
@@ -680,10 +680,10 @@ mod tests {
     }
 
     #[test]
-    fn parses_cedilla_theme() {
-        let text = include_str!("../resources/themes/example-cedilla-theme.ron");
+    fn parses_postilla_theme() {
+        let text = include_str!("../resources/themes/example-postilla-theme.ron");
         let (name, theme) = parse_ron_theme(text, "fallback").unwrap();
-        assert_eq!(name, "Example Cedilla Theme");
+        assert_eq!(name, "Example Postilla Theme");
         // 21 slots + 1 raw scope override
         assert_eq!(theme.scopes.len(), 22);
     }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-//! A syntax highlighter for the Cedilla text editor and preview code blocks.
+//! A syntax highlighter for the Postilla text editor and preview code blocks.
 //!
 //! This is a themeable variant of the `iced_highlighter` crate: instead of a
 //! fixed set of built-in themes it highlights with any [`syntect`] theme,
-//! which lets Cedilla load user supplied themes (tmTheme files, COSMIC
-//! Terminal color schemes, Cedilla RON themes...).
+//! which lets Postilla load user supplied themes (tmTheme files, COSMIC
+//! Terminal color schemes, Postilla RON themes...).
 
 use cosmic::iced::Color;
 use cosmic::iced::core::font::{self, Font};

@@ -1,12 +1,12 @@
 {
-  "app-id": "dev.mariinkys.Cedilla.Fork",
+  "app-id": "io.github.atraxsrc.Postilla",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "26.08",
   "sdk": "org.freedesktop.Sdk",
   "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
   "base": "com.system76.Cosmic.BaseApp",
   "base-version": "stable",
-  "command": "cedilla",
+  "command": "postilla",
   "finish-args": [
     "--share=ipc",
     "--socket=fallback-x11",
@@ -28,20 +28,20 @@
   },
   "modules": [
     {
-      "name": "cedilla",
+      "name": "postilla",
       "buildsystem": "simple",
       "build-options": {
         "env": {
-          "CARGO_HOME": "/run/build/cedilla/cargo"
+          "CARGO_HOME": "/run/build/postilla/cargo"
         }
       },
       "build-commands": [
         "cargo --offline fetch --manifest-path Cargo.toml --verbose",
         "cargo --offline build --release --verbose",
-        "install -Dm0755 -s ./target/release/cedilla /app/bin/cedilla",
-        "install -Dm0644 ./resources/app.desktop /app/share/applications/dev.mariinkys.Cedilla.Fork.desktop",
-        "install -Dm0644 ./resources/app.metainfo.xml /app/share/metainfo/dev.mariinkys.Cedilla.Fork.metainfo.xml",
-        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/dev.mariinkys.Cedilla.Fork.svg"
+        "install -Dm0755 -s ./target/release/postilla /app/bin/postilla",
+        "install -Dm0644 ./resources/app.desktop /app/share/applications/io.github.atraxsrc.Postilla.desktop",
+        "install -Dm0644 ./resources/app.metainfo.xml /app/share/metainfo/io.github.atraxsrc.Postilla.metainfo.xml",
+        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.atraxsrc.Postilla.svg"
       ],
       "sources": [
         {

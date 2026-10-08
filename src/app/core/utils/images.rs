@@ -229,7 +229,7 @@ mod tests {
 
     #[test]
     fn test_save_image_buffer_creates_file_and_avoids_collision() {
-        let dir_path = std::env::temp_dir().join(format!("cedilla_test_{}", std::process::id()));
+        let dir_path = std::env::temp_dir().join(format!("postilla_test_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir_path);
 
         let mut img: RgbaImage = image::ImageBuffer::new(2, 2);
@@ -250,7 +250,7 @@ mod tests {
 
     #[test]
     fn test_copy_image_from_text_path() {
-        let base_dir = std::env::temp_dir().join(format!("cedilla_copy_test_{}", std::process::id()));
+        let base_dir = std::env::temp_dir().join(format!("postilla_copy_test_{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base_dir);
         std::fs::create_dir_all(&base_dir).unwrap();
 

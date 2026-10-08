@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-use crate::app::core::utils::{self, CedillaToast};
+use crate::app::core::utils::{self, PostillaToast};
 use crate::app::{AppModel, DiscardChangesAction, Message, State, dialogs};
 use crate::config::ShowState;
 use crate::fl;
@@ -44,10 +44,10 @@ impl AppModel {
                 }
             },
             |res| match res {
-                Some(Ok(())) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
+                Some(Ok(())) => cosmic::action::app(Message::AddToast(PostillaToast::new(fl!(
                     "pdf-exported"
                 )))),
-                Some(Err(e)) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
+                Some(Err(e)) => cosmic::action::app(Message::AddToast(PostillaToast::new(e))),
                 None => cosmic::action::none(),
             },
         )
@@ -98,10 +98,10 @@ impl AppModel {
                 }
             },
             |res| match res {
-                Some(Ok(())) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
+                Some(Ok(())) => cosmic::action::app(Message::AddToast(PostillaToast::new(fl!(
                     "html-exported"
                 )))),
-                Some(Err(e)) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
+                Some(Err(e)) => cosmic::action::app(Message::AddToast(PostillaToast::new(e))),
                 None => cosmic::action::none(),
             },
         )
