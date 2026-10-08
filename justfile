@@ -74,8 +74,9 @@ uninstall:
     rm {{bin-dst}} {{desktop-dst}} {{icon-svg-dst}} {{icon-symbolic-dst}}
 
 # Builds a Debian package in target/debian (needs `cargo install cargo-deb` and `dpkg-dev`)
+# Local build paths are remapped so the binary does not embed the builder's home directory
 deb *args:
-    cargo deb {{args}}
+    RUSTFLAGS="--remap-path-prefix={{ env('CARGO_HOME', home_directory() / '.cargo') }}=/cargo --remap-path-prefix={{ justfile_directory() }}=/build/postilla" cargo deb {{args}}
 
 # Builds and installs the Debian package
 install-deb: deb
