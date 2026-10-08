@@ -154,6 +154,18 @@
   </keywords>
 
   <releases>
+    <release version="0.2.0" date="2026-10-08">
+        <description>
+            <p>Fork release with its own application id so it can be installed next to Cedilla</p>
+            <p>Added cut, copy, paste and select all to the Edit menu and a right click menu on the editor</p>
+            <p>Added editor only, split and preview only layouts and a zen mode</p>
+            <p>Added customizable syntax highlighting themes: tmTheme, COSMIC Terminal color schemes and Cedilla RON themes</p>
+            <p>Added frosted glass window effect and window opacity settings</p>
+            <p>Added document outline, search across the vault, autosave and HTML export</p>
+            <p>Added strikethrough, quote, table and date/time formatting, word count and reading time</p>
+            <p>Added "Use another folder as vault"</p>
+        </description>
+    </release>
     <release version="0.1.13" date="2026-10-03">
         <description>
             <p>Added Mermaid Diagrams support</p>

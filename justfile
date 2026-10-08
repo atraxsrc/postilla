@@ -71,6 +71,14 @@ install:
 uninstall:
     rm {{bin-dst}} {{desktop-dst}} {{icon-svg-dst}}
 
+# Builds a Debian package in target/debian (needs `cargo install cargo-deb` and `dpkg-dev`)
+deb *args:
+    cargo deb {{args}}
+
+# Builds and installs the Debian package
+install-deb: deb
+    sudo apt install --reinstall ./{{ cargo-target-dir / 'debian' }}/cedilla-fork_*.deb
+
 # Vendor dependencies locally
 vendor:
     mkdir -p .cargo

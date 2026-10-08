@@ -36,6 +36,18 @@ just build-release
 sudo just install
 ```
 
+### Debian package
+
+```sh
+sudo apt install dpkg-dev
+cargo install cargo-deb
+just deb            # builds target/debian/cedilla-fork_<version>_amd64.deb
+just install-deb    # builds and installs it with apt
+```
+
+The package is called `cedilla-fork`, installs the `cedilla` binary, the "Cedilla Fork" launcher entry, its icon and
+metainfo, and lists the shared libraries it needs as dependencies automatically.
+
 ### Testing this fork next to the Flathub Cedilla
 
 This fork uses its own application id (`dev.mariinkys.Cedilla.Fork`), so it can be built, installed and run
