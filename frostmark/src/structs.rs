@@ -132,7 +132,8 @@ pub struct MarkWidget<'a, Message, Theme = cosmic::iced::Theme> {
     pub(crate) ruby_mode: RubyMode,
 
     pub(crate) current_code_language: Option<String>,
-    pub(crate) code_highlight_theme: cosmic::iced::highlighter::Theme,
+    pub(crate) code_highlight_theme: widgets::highlighter::ThemeRef,
+    pub(crate) code_block_theme_colors: bool,
 
     pub(crate) current_typst_id: usize,
     pub(crate) current_mermaid_id: usize,
@@ -163,7 +164,9 @@ impl<'a, M: 'a, T: 'a> MarkWidget<'a, M, T> {
             paragraph_spacing: None,
             ruby_mode: RubyMode::default(),
             current_code_language: None,
-            code_highlight_theme: cosmic::iced::highlighter::Theme::InspiredGitHub,
+            code_highlight_theme: widgets::highlighter::default_theme("InspiredGitHub")
+                .expect("syntect default themes always include InspiredGitHub"),
+            code_block_theme_colors: false,
             current_typst_id: 0,
             current_mermaid_id: 0,
             current_checkbox_id: 0,
@@ -400,9 +403,20 @@ impl<'a, M: 'a, T: 'a> MarkWidget<'a, M, T> {
     }
 
     /// Sets the syntax highlighting theme for code blocks.
+    ///
+    /// Any syntect theme can be used, see [`widgets::highlighter`].
     #[must_use]
-    pub fn code_highlight_theme(mut self, theme: cosmic::iced::highlighter::Theme) -> Self {
+    pub fn code_highlight_theme(mut self, theme: widgets::highlighter::ThemeRef) -> Self {
         self.code_highlight_theme = theme;
+        self
+    }
+
+    /// When enabled, code blocks are painted with the background and
+    /// foreground colors declared by the highlighting theme instead of the
+    /// application theme colors.
+    #[must_use]
+    pub fn code_block_theme_colors(mut self, enabled: bool) -> Self {
+        self.code_block_theme_colors = enabled;
         self
     }
 

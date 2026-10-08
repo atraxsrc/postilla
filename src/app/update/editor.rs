@@ -4,8 +4,8 @@ use crate::app::core::editor::{EditorSearchState, EditorState};
 use crate::app::core::utils::search::SearchAction;
 use crate::app::core::utils::{self};
 use crate::app::{
-    AppModel, Message, State, editor_scrollable_id, preview_scrollable_id, search_input_id,
-    text_editor_id,
+    AppModel, ClipboardAction, Message, State, editor_scrollable_id, preview_scrollable_id,
+    search_input_id, text_editor_id,
 };
 use crate::config::BoolState;
 use cosmic::iced::widget::scrollable::scroll_to;
@@ -47,19 +47,131 @@ impl AppModel {
             Task::none()
         };
 
-        utils::images::download_images(
+        let download = utils::images::download_images(
             &mut preview.markstate,
             &mut preview.images_in_progress,
             &editor.path,
-        )
-        .chain(cursor_task)
+        );
+
+        let autosave = if was_edit {
+            self.schedule_autosave()
+        } else {
+            Task::none()
+        };
+
+        Task::batch([download.chain(cursor_task), autosave])
     }
 
     pub fn handle_apply_formatting(
         &mut self,
         action: utils::SelectionAction,
     ) -> Task<cosmic::Action<Message>> {
-        self.apply_formatting_to_selection(action)
+        let task = self.apply_formatting_to_selection(action);
+        let autosave = self.schedule_autosave();
+        Task::batch([task, autosave])
+    }
+
+    /// Schedules an autosave of the current file if autosave is enabled, the file
+    /// exists on disk and has unsaved changes. Every call restarts the timer.
+    pub fn schedule_autosave(&mut self) -> Task<cosmic::Action<Message>> {
+        let delay = self.config.autosave_delay;
+        let State::Ready { editor, .. } = &self.state else {
+            return Task::none();
+        };
+
+        if delay == 0 || editor.path.is_none() || !editor.is_dirty {
+            return Task::none();
+        }
+
+        self.autosave_generation = self.autosave_generation.wrapping_add(1);
+        let generation = self.autosave_generation;
+
+        Task::perform(
+            tokio::time::sleep(std::time::Duration::from_secs(u64::from(delay))),
+            move |_| cosmic::action::app(Message::AutosaveTick(generation)),
+        )
+    }
+
+    /// Autosave timer fired: save unless the timer was restarted since
+    pub fn handle_autosave_tick(&mut self, generation: u64) -> Task<cosmic::Action<Message>> {
+        if generation != self.autosave_generation || self.config.autosave_delay == 0 {
+            return Task::none();
+        }
+
+        let State::Ready { editor, .. } = &self.state else {
+            return Task::none();
+        };
+
+        if editor.path.is_none() || !editor.is_dirty {
+            return Task::none();
+        }
+
+        self.silent_save = true;
+        self.handle_save_file()
+    }
+
+    /// Cut / copy / paste / select all on the editor
+    pub fn handle_clipboard(&mut self, action: ClipboardAction) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &mut self.state else {
+            return Task::none();
+        };
+
+        match action {
+            ClipboardAction::Copy => match editor.content.selection() {
+                Some(selection) if !selection.is_empty() => self.clipboard_write(selection),
+                _ => Task::none(),
+            },
+            ClipboardAction::Cut => {
+                let Some(selection) = editor.content.selection() else {
+                    return Task::none();
+                };
+                if selection.is_empty() {
+                    return Task::none();
+                }
+
+                let write = self.clipboard_write(selection);
+                let delete = self.handle_edit(text_editor::Action::Edit(text_editor::Edit::Delete));
+                write.chain(delete)
+            }
+            ClipboardAction::Paste => self.handle_smart_paste(),
+            ClipboardAction::SelectAll => {
+                editor.content.perform(text_editor::Action::SelectAll);
+                widgets::text_editor::focus(text_editor_id())
+            }
+        }
+    }
+
+    /// Text read from the toolkit clipboard (fallback when the system clipboard is unavailable)
+    pub fn handle_pasted_text(&mut self, text: Option<String>) -> Task<cosmic::Action<Message>> {
+        match text {
+            Some(text) if !text.is_empty() => {
+                self.handle_edit(text_editor::Action::Edit(text_editor::Edit::Paste(
+                    std::sync::Arc::new(text),
+                )))
+            }
+            _ => Task::none(),
+        }
+    }
+
+    /// Moves the cursor to the start of the given line, scrolls to it and focuses the editor
+    pub fn handle_jump_to_line(&mut self, line: usize) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &mut self.state else {
+            return Task::none();
+        };
+
+        let line = line.min(editor.content.line_count().saturating_sub(1));
+        editor.content.move_to(Cursor {
+            position: Position { line, column: 0 },
+            selection: None,
+        });
+
+        let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
+        let scroll = match editor.scroll.last_editor_viewport {
+            Some(_) => ensure_cursor_visible(editor, sync_preview),
+            None => Task::none(),
+        };
+
+        scroll.chain(widgets::text_editor::focus(text_editor_id()))
     }
 
     pub fn handle_paste_image(&mut self) -> Task<cosmic::Action<Message>> {
@@ -99,12 +211,14 @@ impl AppModel {
                 let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
                 let cursor_task = ensure_cursor_visible(editor, sync_preview);
 
-                utils::images::download_images(
+                let download = utils::images::download_images(
                     &mut preview.markstate,
                     &mut preview.images_in_progress,
                     &editor.path,
-                )
-                .chain(cursor_task)
+                );
+                let autosave = self.schedule_autosave();
+
+                Task::batch([download.chain(cursor_task), autosave])
             }
             Err(err) => {
                 eprintln!("Failed to paste image: {err}");
@@ -152,36 +266,23 @@ impl AppModel {
             let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
             let cursor_task = ensure_cursor_visible(editor, sync_preview);
 
-            return utils::images::download_images(
+            let download = utils::images::download_images(
                 &mut preview.markstate,
                 &mut preview.images_in_progress,
                 &editor.path,
-            )
-            .chain(cursor_task);
+            );
+            let autosave = self.schedule_autosave();
+
+            return Task::batch([download.chain(cursor_task), autosave]);
         }
 
-        // Fall back to standard text paste
-        #[allow(clippy::collapsible_if)]
-        if let Ok(mut clipboard) = arboard::Clipboard::new() {
-            if let Ok(text) = clipboard.get_text() {
-                let cursor_before = editor.content.cursor().position;
-                editor
-                    .content
-                    .perform(text_editor::Action::Edit(text_editor::Edit::Paste(
-                        std::sync::Arc::new(text),
-                    )));
-
-                editor.is_dirty = true;
-                editor.push_history((cursor_before.line, cursor_before.column));
-
-                preview.update_content(editor.content.text().as_ref());
-
-                let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
-                return ensure_cursor_visible(editor, sync_preview);
-            }
+        // Fall back to standard text paste through the system clipboard...
+        if let Some(text) = self.clipboard_read() {
+            return self.handle_pasted_text(Some(text));
         }
 
-        Task::none()
+        // ...or the toolkit clipboard
+        cosmic::iced::clipboard::read().map(|text| cosmic::action::app(Message::PastedText(text)))
     }
 
     pub fn handle_toggle_checkbox(
@@ -228,7 +329,7 @@ impl AppModel {
 
         preview.update_content(editor.content.text().as_ref());
 
-        Task::none()
+        self.schedule_autosave()
     }
 
     pub fn handle_undo(&mut self) -> Task<cosmic::Action<Message>> {
@@ -241,11 +342,12 @@ impl AppModel {
 
         editor.undo(preview);
 
-        utils::images::download_images(
+        let download = utils::images::download_images(
             &mut preview.markstate,
             &mut preview.images_in_progress,
             &editor.path,
-        )
+        );
+        Task::batch([download, self.schedule_autosave()])
     }
 
     pub fn handle_redo(&mut self) -> Task<cosmic::Action<Message>> {
@@ -258,11 +360,12 @@ impl AppModel {
 
         editor.redo(preview);
 
-        utils::images::download_images(
+        let download = utils::images::download_images(
             &mut preview.markstate,
             &mut preview.images_in_progress,
             &editor.path,
-        )
+        );
+        Task::batch([download, self.schedule_autosave()])
     }
 
     pub fn handle_search(&mut self, action: SearchAction) -> Task<cosmic::Action<Message>> {

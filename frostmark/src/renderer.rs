@@ -25,11 +25,41 @@ pub (crate) mod mermaid;
 const COPY_ICON_BYTES: &[u8] = include_bytes!("../../resources/icons/bundled/edit-copy-symbolic.svg");
 
 // Add everything to one place
+/// Lets a theme produce the style class used for code blocks painted with
+/// the colors of the syntax highlighting theme.
+pub trait CodeBlockStyle: widgets::text_editor::Catalog {
+    fn code_block_class<'a>(
+        background: Option<cosmic::iced::Color>,
+        foreground: Option<cosmic::iced::Color>,
+    ) -> Self::Class<'a>;
+}
+
+impl CodeBlockStyle for cosmic::Theme {
+    fn code_block_class<'a>(
+        background: Option<cosmic::iced::Color>,
+        foreground: Option<cosmic::iced::Color>,
+    ) -> Self::Class<'a> {
+        Box::new(move |theme: &cosmic::Theme, status, is_code_block| {
+            let mut style = widgets::text_editor::default(theme, status, is_code_block);
+            if let Some(bg) = background {
+                style.background = cosmic::iced::Background::Color(bg);
+            }
+            if let Some(fg) = foreground {
+                style.value = fg;
+                style.placeholder = fg;
+            }
+            style
+        })
+    }
+}
+
+// Add everything to one place
 pub trait ValidTheme:
     widget::button::Catalog
     + widget::text::Catalog
     + widget::rule::Catalog
     + widgets::text_editor::Catalog
+    + CodeBlockStyle
     + widget::checkbox::Catalog
     + cosmic::widget::svg::Catalog
     + cosmic::widget::aspect_ratio::Catalog
@@ -41,6 +71,7 @@ impl<T> ValidTheme for T where
         + widget::text::Catalog
         + widget::rule::Catalog
         + widgets::text_editor::Catalog
+        + CodeBlockStyle
         + widget::checkbox::Catalog
         + cosmic::widget::svg::Catalog
         + cosmic::widget::aspect_ratio::Catalog
@@ -48,6 +79,48 @@ impl<T> ValidTheme for T where
 }
 
 impl<'a, M: Clone + 'static, T: ValidTheme + 'a> MarkWidget<'a, M, T> {
+    /// Applies the configured syntax highlighting theme (and optionally its
+    /// colors) to a code block editor.
+    fn highlight_code_editor(
+        &self,
+        editor: TextEditor<
+            'a,
+            cosmic::iced::core::text::highlighter::PlainText,
+            M,
+            T,
+            cosmic::Renderer,
+        >,
+    ) -> Element<'a, M, T, cosmic::Renderer> {
+        use widgets::highlighter::{self as hl, Highlighter, Settings};
+
+        let theme = self.code_highlight_theme;
+
+        let editor = if self.code_block_theme_colors {
+            let bg = hl::theme_background(theme);
+            let fg = hl::theme_foreground(theme);
+
+            editor.class(<T as CodeBlockStyle>::code_block_class(bg, fg))
+        } else {
+            editor
+        };
+
+        let token = self
+            .current_code_language
+            .clone()
+            .unwrap_or_else(|| String::from("txt"));
+
+        editor
+            .highlight_with::<Highlighter>(
+                Settings {
+                    theme,
+                    token,
+                    font: self.font_mono,
+                },
+                |highlight, _theme| highlight.to_format(),
+            )
+            .into()
+    }
+
     pub(crate) fn traverse_node(&mut self, node: &Node, data: ChildData) -> RenderedSpan<'a, M, T> {
         match &node.data {
             markup5ever_rcdom::NodeData::Document => self.render_children(node, data),
@@ -610,19 +683,12 @@ impl<'a, M: Clone + 'static, T: ValidTheme + 'a> MarkWidget<'a, M, T> {
                     .padding(8)
                     .into();
 
-                    let highlighted_editor: Element<'a, M, T, cosmic::Renderer> = if let Some(language) = &self.current_code_language {
-                        editor.highlight(language, self.code_highlight_theme).into()
-                    } else {
-                        editor.into()
-                    };
+                    let highlighted_editor: Element<'a, M, T, cosmic::Renderer> =
+                        self.highlight_code_editor(editor);
 
                     widget::stack![highlighted_editor, overlay].into()
             } else {
-                if let Some(language) = &self.current_code_language {
-                    editor.highlight(language, self.code_highlight_theme).into()
-                } else {
-                    editor.into()
-                }
+                self.highlight_code_editor(editor).into()
             }
         } else {
             RenderedSpan::Spans(vec![widget::span(code).size(size).font(self.font_mono)])

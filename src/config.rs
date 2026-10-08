@@ -21,15 +21,26 @@ pub struct CedillaConfig {
     pub show_helper_header_bar: ShowState,
     pub show_status_bar: ShowState,
     pub last_navbar_showstate: ShowState,
-    pub last_preview_showstate: ShowState,
+    /// Layout used the last time the app was closed
+    pub last_view_mode: ViewMode,
     pub open_last_file: BoolState,
     pub last_open_file: Option<PathBuf>,
     pub scrollbar_sync: BoolState,
     pub gotenberg_url: String,
     pub text_size: i32,
-    pub light_highlighter_theme: CedillaHighlighterTheme,
-    pub dark_highlighter_theme: CedillaHighlighterTheme,
+    pub light_highlighter_theme: SyntaxThemeId,
+    pub dark_highlighter_theme: SyntaxThemeId,
+    /// Paint the editor and the preview code blocks with the colors of the
+    /// syntax highlighting theme (background/foreground) instead of the
+    /// application theme colors.
+    pub highlighter_theme_colors: BoolState,
     pub selected_font_family: Option<String>,
+    /// Frosted glass (blur behind the window) behaviour
+    pub frosted_glass: FrostedGlass,
+    /// Window background opacity in percent (100 = opaque)
+    pub window_opacity: u8,
+    /// Seconds of inactivity before an open file is saved automatically (0 = off)
+    pub autosave_delay: u32,
 }
 
 impl Default for CedillaConfig {
@@ -49,19 +60,19 @@ impl Default for CedillaConfig {
             show_helper_header_bar: ShowState::default(),
             show_status_bar: ShowState::default(),
             last_navbar_showstate: ShowState::default(),
-            last_preview_showstate: ShowState::default(),
+            last_view_mode: ViewMode::default(),
             open_last_file: BoolState::default(),
             last_open_file: None,
             scrollbar_sync: BoolState::default(),
             gotenberg_url: String::new(),
             text_size: 16,
-            light_highlighter_theme: CedillaHighlighterTheme::from(
-                cosmic::iced::highlighter::Theme::InspiredGitHub,
-            ),
-            dark_highlighter_theme: CedillaHighlighterTheme::from(
-                cosmic::iced::highlighter::Theme::Base16Ocean,
-            ),
+            light_highlighter_theme: SyntaxThemeId::new(crate::syntax_theme::DEFAULT_LIGHT),
+            dark_highlighter_theme: SyntaxThemeId::new(crate::syntax_theme::DEFAULT_DARK),
+            highlighter_theme_colors: BoolState::No,
             selected_font_family: None,
+            frosted_glass: FrostedGlass::default(),
+            window_opacity: 100,
+            autosave_delay: 0,
         }
     }
 }
@@ -92,7 +103,20 @@ impl CedillaConfig {
     pub fn is_gotenberg_configured(&self) -> bool {
         !self.gotenberg_url.trim().is_empty()
     }
+
+    /// Window opacity clamped to a usable range, as a factor
+    pub fn window_opacity_factor(&self) -> f32 {
+        f32::from(self.window_opacity.clamp(MIN_WINDOW_OPACITY, 100)) / 100.0
+    }
+
+    /// Whether the window should be drawn with a custom (translucent/frosted) theme
+    pub fn needs_custom_theme(&self) -> bool {
+        self.frosted_glass != FrostedGlass::FollowSystem || self.window_opacity < 100
+    }
 }
+
+/// Lowest window opacity the settings allow
+pub const MIN_WINDOW_OPACITY: u8 = 30;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub enum AppTheme {
@@ -110,6 +134,100 @@ impl AppTheme {
             Self::System => theme::system_preference(),
         }
     }
+}
+
+/// Layout of the main view
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum ViewMode {
+    /// Only the text editor
+    Editor,
+    /// Editor and preview side by side
+    #[default]
+    Split,
+    /// Only the rendered preview
+    Preview,
+}
+
+impl ViewMode {
+    pub const ALL: &'static [Self] = &[Self::Editor, Self::Split, Self::Preview];
+
+    pub fn label(self) -> String {
+        match self {
+            ViewMode::Editor => fl!("view-editor"),
+            ViewMode::Split => fl!("view-split"),
+            ViewMode::Preview => fl!("view-preview"),
+        }
+    }
+
+    pub fn icon_name(self) -> &'static str {
+        match self {
+            ViewMode::Editor => "edit-symbolic",
+            ViewMode::Split => "view-split-symbolic",
+            ViewMode::Preview => "show-symbolic",
+        }
+    }
+
+    pub fn shows_editor(self) -> bool {
+        !matches!(self, ViewMode::Preview)
+    }
+
+    pub fn shows_preview(self) -> bool {
+        !matches!(self, ViewMode::Editor)
+    }
+}
+
+/// Frosted glass (compositor blur behind the window) behaviour
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub enum FrostedGlass {
+    /// Follow the COSMIC desktop setting ("Frosted windows")
+    #[default]
+    FollowSystem,
+    /// Always request blur, even if the desktop theme does not enable it
+    Enabled,
+    /// Never request blur
+    Disabled,
+}
+
+impl FrostedGlass {
+    pub const ALL: &'static [Self] = &[Self::FollowSystem, Self::Enabled, Self::Disabled];
+
+    pub fn all_labels() -> &'static [String] {
+        static LABELS: LazyLock<Vec<String>> = LazyLock::new(|| {
+            vec![
+                fl!("frosted-follow-system"),
+                fl!("frosted-enabled"),
+                fl!("frosted-disabled"),
+            ]
+        });
+        &LABELS
+    }
+
+    pub fn from_index(index: usize) -> Self {
+        Self::ALL.get(index).copied().unwrap_or_default()
+    }
+
+    pub fn to_index(self) -> usize {
+        Self::ALL.iter().position(|m| *m == self).unwrap_or(0)
+    }
+}
+
+/// Autosave delays offered in the settings (seconds, 0 = off)
+pub const AUTOSAVE_DELAYS: &[u32] = &[0, 1, 3, 5, 10, 30, 60];
+
+pub fn autosave_labels() -> &'static [String] {
+    static LABELS: LazyLock<Vec<String>> = LazyLock::new(|| {
+        AUTOSAVE_DELAYS
+            .iter()
+            .map(|secs| {
+                if *secs == 0 {
+                    fl!("autosave-off")
+                } else {
+                    fl!("autosave-seconds", seconds = secs)
+                }
+            })
+            .collect()
+    });
+    &LABELS
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -147,6 +265,10 @@ impl ShowState {
             ShowState::Show => 0,
             ShowState::Hide => 1,
         }
+    }
+
+    pub fn is_shown(self) -> bool {
+        matches!(self, ShowState::Show)
     }
 }
 
@@ -186,43 +308,75 @@ impl BoolState {
             BoolState::No => 1,
         }
     }
+
+    pub fn is_yes(self) -> bool {
+        matches!(self, BoolState::Yes)
+    }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct CedillaHighlighterTheme(pub cosmic::iced::highlighter::Theme);
+/// Identifier of a syntax highlighting theme, see [`crate::syntax_theme`].
+///
+/// Older versions of Cedilla stored the index of an `iced::highlighter::Theme`;
+/// those values are still accepted when deserializing.
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+pub struct SyntaxThemeId(pub String);
 
-impl Serialize for CedillaHighlighterTheme {
+impl SyntaxThemeId {
+    pub fn new(id: &str) -> Self {
+        Self(id.to_string())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Serialize for SyntaxThemeId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        serializer.serialize_u8(self.0 as u8)
+        serializer.serialize_str(&self.0)
     }
 }
 
-impl<'de> Deserialize<'de> for CedillaHighlighterTheme {
+impl<'de> Deserialize<'de> for SyntaxThemeId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let n = u8::deserialize(deserializer)?;
-        cosmic::iced::highlighter::Theme::ALL
-            .get(n as usize)
-            .copied()
-            .map(CedillaHighlighterTheme)
-            .ok_or_else(|| serde::de::Error::custom(format!("invalid theme index: {n}")))
-    }
-}
+        struct IdVisitor;
 
-impl From<cosmic::iced::highlighter::Theme> for CedillaHighlighterTheme {
-    fn from(theme: cosmic::iced::highlighter::Theme) -> Self {
-        CedillaHighlighterTheme(theme)
-    }
-}
+        impl serde::de::Visitor<'_> for IdVisitor {
+            type Value = SyntaxThemeId;
 
-impl From<CedillaHighlighterTheme> for cosmic::iced::highlighter::Theme {
-    fn from(theme: CedillaHighlighterTheme) -> Self {
-        theme.0
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("a theme id string or a legacy theme index")
+            }
+
+            fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {
+                Ok(SyntaxThemeId(v.to_string()))
+            }
+
+            fn visit_string<E: serde::de::Error>(self, v: String) -> Result<Self::Value, E> {
+                Ok(SyntaxThemeId(v))
+            }
+
+            fn visit_u64<E: serde::de::Error>(self, v: u64) -> Result<Self::Value, E> {
+                crate::syntax_theme::legacy_index_to_id(v)
+                    .map(SyntaxThemeId)
+                    .ok_or_else(|| E::custom(format!("invalid theme index: {v}")))
+            }
+
+            fn visit_i64<E: serde::de::Error>(self, v: i64) -> Result<Self::Value, E> {
+                if v < 0 {
+                    return Err(E::custom(format!("invalid theme index: {v}")));
+                }
+                self.visit_u64(v as u64)
+            }
+        }
+
+        deserializer.deserialize_any(IdVisitor)
     }
 }
 
@@ -247,12 +401,28 @@ pub enum ConfigInput {
     GotenbergUrlSave,
     /// Update the editor and preview text size
     UpdateTextSize(u16),
-    /// Update the highlighter theme for light app themes
+    /// Update the highlighter theme for light app themes (index in the theme registry)
     UpdateLightHighlighterTheme(usize),
-    /// Update the highlighter theme for dark app themes
+    /// Update the highlighter theme for dark app themes (index in the theme registry)
     UpdateDarkHighlighterTheme(usize),
+    /// Use the highlighter theme colors for the editor background/foreground
+    HighlighterThemeColors(BoolState),
+    /// Pick a theme file (RON / tmTheme) to import into the themes folder
+    ImportSyntaxTheme,
+    /// Callback after importing a theme file
+    SyntaxThemeImported(Result<String, String>),
+    /// Open the themes folder in the file manager
+    OpenThemesFolder,
+    /// Re-read the themes folder
+    ReloadSyntaxThemes,
     /// Update the selected font for the preview and editor tabs
     UpdateFont(usize),
     /// Reset to the default font
     ResetFont,
+    /// Update the frosted glass behaviour
+    FrostedGlass(usize),
+    /// Update the window opacity (percent)
+    WindowOpacity(u8),
+    /// Update the autosave delay (index in [`AUTOSAVE_DELAYS`])
+    Autosave(usize),
 }

@@ -9,6 +9,7 @@ mod flags;
 mod i18n;
 mod icons;
 mod key_binds;
+mod syntax_theme;
 
 fn main() -> cosmic::iced::Result {
     // Get the system's preferred languages.
@@ -26,6 +27,8 @@ fn main() -> cosmic::iced::Result {
         )
         .size(cosmic::iced::Size::new(1200.0, 800.0))
         .is_daemon(false)
+        // Needed for frosted glass / translucent window backgrounds
+        .transparent(true)
         .exit_on_close(false);
 
     // Init the icon cache

@@ -42,6 +42,17 @@ impl IconCache {
         bundle!("markdown-symbolic", 18);
         bundle!("dialog-information-symbolic", 18);
         bundle!("regex-symbolic", 18);
+        bundle!("view-split-symbolic", 18);
+        bundle!("view-split-symbolic", 16);
+        bundle!("edit-symbolic", 16);
+        bundle!("show-symbolic", 16);
+        bundle!("zen-symbolic", 18);
+        bundle!("outline-symbolic", 18);
+        bundle!("outline-symbolic", 16);
+        bundle!("search-vault-symbolic", 18);
+        bundle!("import-symbolic", 16);
+        bundle!("folder-open-symbolic", 16);
+        bundle!("refresh-symbolic", 16);
 
         bundle!("helperbar/bold-symbolic", 18);
         bundle!("helperbar/bulleted-list-symbolic", 18);
@@ -55,6 +66,10 @@ impl IconCache {
         bundle!("helperbar/rule-symbolic", 18);
         bundle!("helperbar/pdf-symbolic", 18);
         bundle!("helperbar/math-symbolic", 18);
+        bundle!("helperbar/strikethrough-symbolic", 18);
+        bundle!("helperbar/quote-symbolic", 18);
+        bundle!("helperbar/table-symbolic", 18);
+        bundle!("helperbar/datetime-symbolic", 18);
 
         Self { cache }
     }

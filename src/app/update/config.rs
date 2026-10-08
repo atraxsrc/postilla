@@ -1,9 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 
+use std::sync::Arc;
+
+use crate::app::core::utils::{self, CedillaToast};
 use crate::app::{AppModel, Message};
-use crate::config::{AppTheme, CedillaConfig, CedillaHighlighterTheme, ConfigInput};
+use crate::config::{
+    AUTOSAVE_DELAYS, AppTheme, CedillaConfig, ConfigInput, FrostedGlass, MIN_WINDOW_OPACITY,
+    SyntaxThemeId,
+};
+use crate::fl;
+use crate::syntax_theme::ThemeRegistry;
+use cosmic::cosmic_config::CosmicConfigEntry;
+use cosmic::cosmic_theme::ThemeBuilder;
 use cosmic::iced::Font;
 use cosmic::prelude::*;
+use enumflags2::BitFlags;
 
 impl AppModel {
     /// Applies a config change via the handler, falling back to an in-memory update if the handler fails or is missing.
@@ -21,11 +32,87 @@ impl AppModel {
         Task::none()
     }
 
+    /// Builds the application theme from the configuration (app theme, frosted
+    /// glass behaviour and window opacity) and applies it.
+    pub fn apply_theme(&mut self) -> Task<cosmic::Action<Message>> {
+        // Let libcosmic request compositor blur for our surfaces unless the user disabled it
+        let auto_blur = if self.config.frosted_glass == FrostedGlass::Disabled {
+            BitFlags::empty()
+        } else {
+            cosmic::core::Auto::Window | cosmic::core::Auto::Popup | cosmic::core::Auto::System
+        };
+        self.core.set_auto_blur(auto_blur);
+
+        cosmic::command::set_theme(self.build_theme())
+    }
+
+    /// The theme to use for the window, see [`Self::apply_theme`]
+    fn build_theme(&self) -> cosmic::Theme {
+        let base = self.config.app_theme.theme();
+
+        if !self.config.needs_custom_theme() {
+            return base;
+        }
+
+        let is_dark = base.cosmic().is_dark;
+
+        // Start from the desktop's theme builder so accent, palette... are kept
+        let builder_config = if is_dark {
+            ThemeBuilder::dark_config()
+        } else {
+            ThemeBuilder::light_config()
+        };
+        let mut builder = match builder_config {
+            Ok(config) => ThemeBuilder::get_entry(&config).unwrap_or_else(|(_, builder)| builder),
+            Err(_) if is_dark => ThemeBuilder::dark(),
+            Err(_) => ThemeBuilder::light(),
+        };
+
+        if self.config.window_opacity < 100 {
+            let mut bg = base.cosmic().bg_color();
+            bg.alpha = self.config.window_opacity_factor();
+            builder = builder.bg_color(bg);
+        }
+
+        match self.config.frosted_glass {
+            FrostedGlass::FollowSystem => {}
+            FrostedGlass::Enabled => builder.frosted_windows = true,
+            FrostedGlass::Disabled => builder.frosted_windows = false,
+        }
+
+        cosmic::Theme::custom(Arc::new(builder.build()))
+    }
+
+    /// Stores the given syntax theme id for light or dark app themes
+    fn set_highlighter_theme(&mut self, index: usize, dark: bool) -> Task<cosmic::Action<Message>> {
+        let Some(theme) = self.syntax_themes.themes().get(index) else {
+            return Task::none();
+        };
+        let id = SyntaxThemeId::new(&theme.id);
+
+        self.apply_config(move |config, handler| {
+            if dark {
+                if let Some(h) = handler {
+                    config
+                        .set_dark_highlighter_theme(h, id)
+                        .map_err(|e| e.to_string())?;
+                } else {
+                    config.dark_highlighter_theme = id;
+                }
+            } else if let Some(h) = handler {
+                config
+                    .set_light_highlighter_theme(h, id)
+                    .map_err(|e| e.to_string())?;
+            } else {
+                config.light_highlighter_theme = id;
+            }
+            Ok(())
+        })
+    }
+
     pub fn handle_config_input(&mut self, input: ConfigInput) -> Task<cosmic::Action<Message>> {
         match input {
-            ConfigInput::SystemThemeModeChange => {
-                cosmic::command::set_theme(self.config.app_theme.theme())
-            }
+            ConfigInput::SystemThemeModeChange => self.apply_theme(),
             ConfigInput::UpdateTheme(index) => {
                 let app_theme = match index {
                     1 => AppTheme::Dark,
@@ -42,7 +129,43 @@ impl AppModel {
                     self.config.app_theme = app_theme;
                 }
 
-                cosmic::command::set_theme(self.config.app_theme.theme())
+                self.apply_theme()
+            }
+            ConfigInput::FrostedGlass(index) => {
+                let mode = FrostedGlass::from_index(index);
+                let _ = self.apply_config(move |config, handler| {
+                    if let Some(h) = handler {
+                        config.set_frosted_glass(h, mode).map_err(|e| e.to_string())?;
+                    } else {
+                        config.frosted_glass = mode;
+                    }
+                    Ok(())
+                });
+                self.apply_theme()
+            }
+            ConfigInput::WindowOpacity(value) => {
+                let value = value.clamp(MIN_WINDOW_OPACITY, 100);
+                let _ = self.apply_config(move |config, handler| {
+                    if let Some(h) = handler {
+                        config.set_window_opacity(h, value).map_err(|e| e.to_string())?;
+                    } else {
+                        config.window_opacity = value;
+                    }
+                    Ok(())
+                });
+                self.apply_theme()
+            }
+            ConfigInput::Autosave(index) => {
+                let delay = AUTOSAVE_DELAYS.get(index).copied().unwrap_or(0);
+                let _ = self.apply_config(move |config, handler| {
+                    if let Some(h) = handler {
+                        config.set_autosave_delay(h, delay).map_err(|e| e.to_string())?;
+                    } else {
+                        config.autosave_delay = delay;
+                    }
+                    Ok(())
+                });
+                self.schedule_autosave()
             }
             ConfigInput::HelperHeaderBarShowState(show_state) => {
                 self.apply_config(|config, handler| {
@@ -91,6 +214,8 @@ impl AppModel {
                     config
                         .set_gotenberg_url(h, state)
                         .map_err(|e| e.to_string())?;
+                } else {
+                    config.gotenberg_url = state;
                 }
                 Ok(())
             }),
@@ -110,38 +235,90 @@ impl AppModel {
                 })
             }
             ConfigInput::UpdateLightHighlighterTheme(index) => {
-                if let Some(&theme) = cosmic::iced::highlighter::Theme::ALL.get(index) {
-                    let theme = CedillaHighlighterTheme::from(theme);
-                    self.apply_config(move |config, handler| {
-                        if let Some(h) = handler {
-                            config
-                                .set_light_highlighter_theme(h, theme)
-                                .map_err(|e| e.to_string())?;
-                        } else {
-                            config.light_highlighter_theme = theme;
-                        }
-                        Ok(())
-                    })
-                } else {
-                    Task::none()
-                }
+                self.set_highlighter_theme(index, false)
             }
             ConfigInput::UpdateDarkHighlighterTheme(index) => {
-                if let Some(&theme) = cosmic::iced::highlighter::Theme::ALL.get(index) {
-                    let theme = CedillaHighlighterTheme::from(theme);
-                    self.apply_config(move |config, handler| {
-                        if let Some(h) = handler {
-                            config
-                                .set_dark_highlighter_theme(h, theme)
-                                .map_err(|e| e.to_string())?;
-                        } else {
-                            config.dark_highlighter_theme = theme;
-                        }
-                        Ok(())
-                    })
+                self.set_highlighter_theme(index, true)
+            }
+            ConfigInput::HighlighterThemeColors(state) => self.apply_config(|config, handler| {
+                if let Some(h) = handler {
+                    config
+                        .set_highlighter_theme_colors(h, state)
+                        .map_err(|e| e.to_string())?;
                 } else {
-                    Task::none()
+                    config.highlighter_theme_colors = state;
                 }
+                Ok(())
+            }),
+            ConfigInput::ImportSyntaxTheme => Task::perform(
+                async move { utils::files::open_theme_file_picker().await },
+                |path| match path {
+                    Some(path) => cosmic::action::app(Message::ConfigInput(
+                        ConfigInput::SyntaxThemeImported(
+                            // the registry lives on the model, import happens there
+                            Ok(path.to_string_lossy().into_owned()),
+                        ),
+                    )),
+                    None => cosmic::action::none(),
+                },
+            ),
+            ConfigInput::SyntaxThemeImported(result) => {
+                let path = match result {
+                    Ok(path) => std::path::PathBuf::from(path),
+                    Err(err) => {
+                        return self.handle_add_toast(CedillaToast::new(fl!(
+                            "theme-import-failed",
+                            error = err
+                        )));
+                    }
+                };
+
+                match self.syntax_themes.import(&path) {
+                    Ok(id) => {
+                        self.syntax_theme_names = self.syntax_themes.names();
+                        let name = self
+                            .syntax_themes
+                            .get(&id)
+                            .map(|t| t.name.clone())
+                            .unwrap_or_else(|| id.clone());
+                        let is_dark = self.syntax_themes.get(&id).is_some_and(|t| t.is_dark);
+
+                        // select the imported theme for the matching mode right away
+                        let theme_id = SyntaxThemeId::new(&id);
+                        let _ = self.apply_config(move |config, handler| {
+                            if is_dark {
+                                if let Some(h) = handler {
+                                    config
+                                        .set_dark_highlighter_theme(h, theme_id)
+                                        .map_err(|e| e.to_string())?;
+                                } else {
+                                    config.dark_highlighter_theme = theme_id;
+                                }
+                            } else if let Some(h) = handler {
+                                config
+                                    .set_light_highlighter_theme(h, theme_id)
+                                    .map_err(|e| e.to_string())?;
+                            } else {
+                                config.light_highlighter_theme = theme_id;
+                            }
+                            Ok(())
+                        });
+
+                        self.handle_add_toast(CedillaToast::new(fl!("theme-imported", name = name)))
+                    }
+                    Err(err) => self.handle_add_toast(CedillaToast::new(fl!(
+                        "theme-import-failed",
+                        error = err.to_string()
+                    ))),
+                }
+            }
+            ConfigInput::OpenThemesFolder => {
+                self.handle_open_in_file_explorer(&ThemeRegistry::user_dir())
+            }
+            ConfigInput::ReloadSyntaxThemes => {
+                self.syntax_themes.reload_user_themes();
+                self.syntax_theme_names = self.syntax_themes.names();
+                Task::none()
             }
             ConfigInput::UpdateFont(index) => {
                 if let Some(name) = self.system_fonts.get(index).cloned() {

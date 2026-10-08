@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 use crate::app::core::utils::Image;
-use crate::app::{
-    AppModel, Message, PreviewState, State, editor_scrollable_id, preview_scrollable_id,
-};
-use crate::config::BoolState;
+use crate::app::{AppModel, Message, State, editor_scrollable_id, preview_scrollable_id};
+use crate::config::{BoolState, ViewMode};
 use cosmic::iced::widget::scrollable::scroll_to;
 use cosmic::iced::widget::{pane_grid, scrollable};
 use cosmic::prelude::*;
-use cosmic::widget::{self};
+use cosmic::widget::{self, segmented_button};
 use frostmark::UpdateMsg;
 
 impl AppModel {
@@ -46,17 +44,49 @@ impl AppModel {
         Task::none()
     }
 
-    pub fn handle_set_preview_state(
-        &mut self,
-        desired_state: PreviewState,
-    ) -> Task<cosmic::Action<Message>> {
-        let State::Ready { preview_state, .. } = &mut self.state else {
+    /// Changes the layout of the main view
+    pub fn handle_set_view_mode(&mut self, mode: ViewMode) -> Task<cosmic::Action<Message>> {
+        let State::Ready { view_mode, .. } = &mut self.state else {
             return Task::none();
         };
 
-        *preview_state = desired_state;
+        *view_mode = mode;
+
+        // keep the header bar switcher in sync
+        let entity = self
+            .view_mode_model
+            .iter()
+            .find(|e| self.view_mode_model.data::<ViewMode>(*e) == Some(&mode));
+        if let Some(entity) = entity {
+            self.view_mode_model.activate(entity);
+        }
+
+        // remember the layout
+        if let Some(handler) = &self.config_handler
+            && let Err(err) = self.config.set_last_view_mode(handler, mode)
+        {
+            eprintln!("{err}");
+        }
+
+        // the preview viewport is stale after being hidden, drop it so the scroll
+        // sync doesn't jump when it comes back
+        if let State::Ready { editor, .. } = &mut self.state
+            && !mode.shows_preview()
+        {
+            editor.scroll.last_preview_viewport = None;
+        }
 
         Task::none()
+    }
+
+    pub fn handle_view_mode_selected(
+        &mut self,
+        entity: segmented_button::Entity,
+    ) -> Task<cosmic::Action<Message>> {
+        match self.view_mode_model.data::<ViewMode>(entity).copied() {
+            Some(mode) => self.handle_set_view_mode(mode),
+            None => Task::none(),
+        }
     }
 
     pub fn handle_pane_resized(

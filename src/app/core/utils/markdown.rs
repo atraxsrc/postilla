@@ -42,6 +42,14 @@ pub enum SelectionAction {
     CheckboxList,
     /// Add horizontal rule
     Rule,
+    /// Convert selection to strikethrough / Insert strikethrough markers
+    Strikethrough,
+    /// Convert selection to a blockquote / Insert a quote marker
+    Blockquote,
+    /// Insert a table template
+    Table,
+    /// Insert the current date and time
+    DateTime,
 }
 
 impl SelectionAction {
@@ -51,6 +59,7 @@ impl SelectionAction {
             SelectionAction::BulletedList
                 | SelectionAction::NumberedList
                 | SelectionAction::CheckboxList
+                | SelectionAction::Blockquote
         )
     }
 }
@@ -238,7 +247,73 @@ fn format_selected_text(selected_text: &str, action: SelectionAction) -> String 
         }
 
         SelectionAction::Rule => "---".to_string(),
+
+        SelectionAction::Strikethrough => {
+            if is_empty {
+                "~~~~".to_string()
+            } else if selected_text.starts_with("~~")
+                && selected_text.ends_with("~~")
+                && selected_text.len() >= 4
+            {
+                selected_text[2..selected_text.len() - 2].to_string()
+            } else {
+                format!("~~{}~~", selected_text)
+            }
+        }
+
+        SelectionAction::Blockquote => {
+            if is_empty {
+                "> ".to_string()
+            } else if all_lines_have_prefix(selected_text, "> ") {
+                remove_line_prefix(selected_text, "> ")
+            } else {
+                format_list(selected_text, "> ")
+            }
+        }
+
+        SelectionAction::Table => {
+            if is_empty {
+                "| Column 1 | Column 2 | Column 3 |\n| --- | --- | --- |\n|  |  |  |\n".to_string()
+            } else {
+                // every line becomes a row, cells separated by commas or tabs
+                let rows: Vec<Vec<&str>> = selected_text
+                    .lines()
+                    .map(|line| {
+                        line.split(['\t', ','])
+                            .map(str::trim)
+                            .collect::<Vec<_>>()
+                    })
+                    .collect();
+                let columns = rows.iter().map(Vec::len).max().unwrap_or(1).max(1);
+
+                let mut out = String::new();
+                for (i, row) in rows.iter().enumerate() {
+                    out.push('|');
+                    for c in 0..columns {
+                        out.push(' ');
+                        out.push_str(row.get(c).copied().unwrap_or(""));
+                        out.push_str(" |");
+                    }
+                    out.push('\n');
+                    if i == 0 {
+                        out.push('|');
+                        for _ in 0..columns {
+                            out.push_str(" --- |");
+                        }
+                        out.push('\n');
+                    }
+                }
+                out
+            }
+        }
+
+        SelectionAction::DateTime => current_date_time(),
     }
+}
+
+/// The current local date and time, e.g. `2026-10-08 14:05`
+pub fn current_date_time() -> String {
+    jiff::Zoned::now().strftime("%Y-%m-%d %H:%M").to_string()
 }
 
 fn toggle_heading(text: &str, level: usize) -> String {

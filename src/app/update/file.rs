@@ -4,11 +4,9 @@ use crate::app::core::editor::{EditorScrollState, EditorSearchState, EditorState
 use crate::app::core::history::HistoryState;
 use crate::app::core::preview::MarkdownPreview;
 use crate::app::core::utils::{self, CedillaToast};
-use crate::app::{
-    AppModel, Message, PreviewState, State, editor_scrollable_id, preview_scrollable_id,
-};
+use crate::app::{AppModel, Message, State, editor_scrollable_id, preview_scrollable_id};
 use crate::app::{DiscardChangesAction, create_default_panes};
-use crate::config::{BoolState, ShowState};
+use crate::config::{BoolState, ViewMode};
 use cosmic::iced::widget::scrollable::scroll_to;
 use cosmic::prelude::*;
 use frostmark::MarkState;
@@ -23,11 +21,7 @@ impl AppModel {
         open_with_file: Option<PathBuf>,
     ) -> Task<cosmic::Action<Message>> {
         let panes = create_default_panes();
-
-        let preview_state = match self.config.last_preview_showstate {
-            ShowState::Show => PreviewState::Shown,
-            ShowState::Hide => PreviewState::Hidden,
-        };
+        let view_mode = self.config.last_view_mode;
 
         let path = open_with_file.or_else(|| match self.config.open_last_file {
             BoolState::Yes => self.config.last_open_file.clone(),
@@ -43,9 +37,7 @@ impl AppModel {
             return Task::perform(utils::files::load_file(p), |res| {
                 cosmic::action::app(Message::OpenFile(res))
             })
-            .chain(Task::done(cosmic::action::app(Message::SetPreviewState(
-                preview_state,
-            ))));
+            .chain(Task::done(cosmic::action::app(Message::SetViewMode(view_mode))));
         }
 
         self.state = State::Ready {
@@ -65,14 +57,14 @@ impl AppModel {
                 images_in_progress: HashSet::new(),
             },
             panes,
-            preview_state,
+            view_mode,
         };
         Task::none()
     }
 
     pub fn handle_new_file(&mut self) -> Task<cosmic::Action<Message>> {
         let panes = get_previous_pane_state(self);
-        let preview_state = get_previous_preview_state(self);
+        let view_mode = get_previous_view_mode(self);
 
         self.state = State::Ready {
             editor: EditorState {
@@ -96,7 +88,7 @@ impl AppModel {
                 images_in_progress: HashSet::new(),
             },
             panes,
-            preview_state,
+            view_mode,
         };
 
         Task::batch([
@@ -135,7 +127,7 @@ impl AppModel {
         self.insert_file_node(&file_path, &dir);
 
         let panes = get_previous_pane_state(self);
-        let preview_state = get_previous_preview_state(self);
+        let view_mode = get_previous_view_mode(self);
 
         self.state = State::Ready {
             editor: EditorState {
@@ -159,7 +151,7 @@ impl AppModel {
                 images_in_progress: HashSet::new(),
             },
             panes,
-            preview_state,
+            view_mode,
         };
 
         Task::batch([
@@ -247,7 +239,7 @@ impl AppModel {
                 }
 
                 let panes = get_previous_pane_state(self);
-                let preview_state = get_previous_preview_state(self);
+                let view_mode = get_previous_view_mode(self);
 
                 let markstate = MarkState::with_html_and_markdown(content.as_ref());
                 let images_in_progress = HashSet::new();
@@ -274,7 +266,7 @@ impl AppModel {
                         images_in_progress,
                     },
                     panes,
-                    preview_state,
+                    view_mode,
                 };
 
                 let reset_editor =
@@ -284,6 +276,11 @@ impl AppModel {
                 let reset_preview =
                     scroll_to(preview_scrollable_id(), crate::app::utils::scroll::abs(0.0))
                         .map(cosmic::action::app);
+
+                let jump = match self.pending_jump_line.take() {
+                    Some(line) => Task::done(cosmic::action::app(Message::JumpToLine(line))),
+                    None => Task::none(),
+                };
 
                 if let State::Ready {
                     editor, preview, ..
@@ -295,7 +292,8 @@ impl AppModel {
                         &editor.path,
                     )
                     .chain(reset_editor)
-                    .chain(reset_preview);
+                    .chain(reset_preview)
+                    .chain(jump);
                 }
 
                 Task::none()
@@ -318,11 +316,19 @@ impl AppModel {
                     editor.path = Some(new_path);
                     editor.is_dirty = false;
 
-                    self.handle_add_toast(CedillaToast::new("File Saved!"))
+                    if std::mem::take(&mut self.silent_save) {
+                        Task::none()
+                    } else {
+                        self.handle_add_toast(CedillaToast::new(crate::fl!("file-saved")))
+                    }
                 }
-                Err(e) => self.handle_add_toast(CedillaToast::new(e)),
+                Err(e) => {
+                    self.silent_save = false;
+                    self.handle_add_toast(CedillaToast::new(e))
+                }
             }
         } else {
+            self.silent_save = false;
             let State::Ready { editor, .. } = &mut self.state else {
                 return Task::none();
             };
@@ -385,11 +391,11 @@ fn get_previous_pane_state(
     panes.clone()
 }
 
-/// Returns the previous state of the preview if available, default if not
-fn get_previous_preview_state(app_model: &AppModel) -> PreviewState {
-    let State::Ready { preview_state, .. } = &app_model.state else {
-        return PreviewState::Shown;
+/// Returns the previous view mode if available, default if not
+fn get_previous_view_mode(app_model: &AppModel) -> ViewMode {
+    let State::Ready { view_mode, .. } = &app_model.state else {
+        return app_model.config.last_view_mode;
     };
 
-    preview_state.clone()
+    *view_mode
 }

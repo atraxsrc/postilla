@@ -9,3 +9,4 @@ mod others;
 mod preview;
 mod ui;
 mod vault;
+mod vault_search;

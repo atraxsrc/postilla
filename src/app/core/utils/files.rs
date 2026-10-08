@@ -248,3 +248,65 @@ pub async fn open_folder_picker(vault_path: String) -> Option<String> {
         None
     }
 }
+
+/// Open a system dialog to select where to save an HTML file, returns the selected file (if any)
+pub async fn open_html_file_saver(suggested_name: Option<String>) -> Option<String> {
+    let mut request = SelectedFiles::save_file()
+        .title("Export HTML")
+        .accept_label("Export")
+        .modal(true)
+        .filter(FileFilter::new("HTML Files").glob("*.html").glob("*.htm"));
+
+    if let Some(name) = suggested_name {
+        request = request.current_name(Some(name.as_str()));
+    }
+
+    let result = request.send().await.ok()?.response();
+
+    if let Ok(result) = result {
+        result
+            .uris()
+            .iter()
+            .map(|file| {
+                percent_encoding::percent_decode_str(file.path())
+                    .decode_utf8_lossy()
+                    .into_owned()
+            })
+            .collect::<Vec<String>>()
+            .first()
+            .cloned()
+    } else {
+        None
+    }
+}
+
+/// Open a system dialog to select a syntax theme file (RON or tmTheme)
+pub async fn open_theme_file_picker() -> Option<PathBuf> {
+    let result = SelectedFiles::open_file()
+        .title("Import Syntax Theme")
+        .accept_label("Import")
+        .modal(true)
+        .multiple(false)
+        .filter(
+            FileFilter::new("Syntax Themes")
+                .glob("*.ron")
+                .glob("*.tmTheme")
+                .glob("*.tmtheme"),
+        )
+        .send()
+        .await
+        .ok()?
+        .response();
+
+    if let Ok(result) = result {
+        result.uris().iter().next().map(|file| {
+            PathBuf::from(
+                percent_encoding::percent_decode_str(file.path())
+                    .decode_utf8_lossy()
+                    .into_owned(),
+            )
+        })
+    } else {
+        None
+    }
+}

@@ -36,6 +36,57 @@ just build-release
 sudo just install
 ```
 
+## Features
+
+- **Vault** of notes with folders, drag free move/rename, external change detection
+- **Three layouts**: editor only, editor + live preview, preview only (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`, or the switcher in the header bar)
+- **Zen mode** (`F11`): hides every bar and the sidebar, leaving only your text
+- **Clipboard**: cut / copy / paste / select all from the *Edit* menu, the editor right-click menu or the usual shortcuts; `Ctrl+V` pastes images straight into the note
+- **Formatting**: bold, italic, strikethrough, code, links, quotes, tables, lists, headings, rules, date & time stamps (`Format` menu, help bar, or shortcuts such as `Ctrl+B`, `Ctrl+I`, `Ctrl+K`, `Ctrl+Shift+D`)
+- **Outline** (`Ctrl+Shift+O`): jump between the headings of the document
+- **Search in vault** (`Ctrl+Shift+F`): full text (or regex) search across every note, open a result at the matching line
+- **Autosave** with a configurable delay
+- **Export** to standalone HTML, copy as HTML, or export to PDF (Gotenberg)
+- Word count, character count and reading time in the status bar
+- **Fully customizable syntax highlighting**: import TextMate/Sublime `.tmTheme` files, COSMIC Terminal color schemes or simple Cedilla RON themes, and optionally paint the editor with the theme colors
+- **Frosted glass** window effect with adjustable opacity on COSMIC
+
+## Syntax highlighting themes
+
+Cedilla ships the usual built-in themes (Inspired GitHub, Ocean, Mocha, Eighties, Solarized...) and
+loads any theme placed in its themes folder (*Settings → Appearance → Themes folder*, or use
+*Import theme…*). Three formats are detected automatically:
+
+| Format | File | Notes |
+| --- | --- | --- |
+| **COSMIC Terminal color scheme** | `.ron` | The exact files COSMIC Terminal imports and exports. The 16 ANSI colors are mapped onto syntax scopes (keywords → magenta, strings → green, functions → blue, headings → bright blue…). |
+| **Cedilla theme** | `.ron` | A flat list of named colors: `keyword`, `string`, `heading`, `link`… plus optional raw TextMate scope overrides. See [`resources/themes/example-cedilla-theme.ron`](./resources/themes/example-cedilla-theme.ron). |
+| **TextMate / Sublime theme** | `.tmTheme` | Any theme from the Sublime Text ecosystem. |
+
+```ron
+// A minimal Cedilla theme
+(
+    name: "Mine",
+    background: "#1e1e2e",
+    foreground: "#cdd6f4",
+    comment: "#6c7086",
+    keyword: "#cba6f7",
+    string: "#a6e3a1",
+    heading: "#89b4fa",
+    link: "#74c7ec",
+    scopes: { "entity.name.function.macro": "#f5c2e7" },
+)
+```
+
+Pick a theme for light and for dark mode independently. Turn on *Use highlighter theme colors* to paint the
+editor and the preview code blocks with the theme's own background and text colors (great with terminal themes).
+
+## Frosted glass
+
+Under *Settings → Window* you can set the frosted glass behaviour (*Follow desktop*, *Enabled*, *Disabled*) and the
+window opacity. Blur behind the window is provided by the compositor, so it needs COSMIC with blur support; on other
+desktops the window simply becomes translucent.
+
 ## Typst Support
 
 The app has some support for [Typst](https://typst.app/) inside `code` blocks. This has been added specially for math and formulas; other Typst features may not work correctly. (But you're free to try). You can add Typst using `typ` or `typst` as the languge attribut inside a `code` block.

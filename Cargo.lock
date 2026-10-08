@@ -805,6 +805,7 @@ dependencies = [
  "base64 0.23.1",
  "dirs 7.0.0",
  "dissimilar",
+ "enumflags2",
  "font-kit",
  "frostmark",
  "futures-util",
@@ -824,6 +825,7 @@ dependencies = [
  "pulldown-cmark",
  "regex",
  "reqwest",
+ "ron",
  "rust-embed",
  "serde",
  "slotmap",
@@ -8451,6 +8453,8 @@ name = "widgets"
 version = "0.1.0"
 dependencies = [
  "libcosmic",
+ "syntect",
+ "two-face",
 ]
 
 [[package]]

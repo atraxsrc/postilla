@@ -15,6 +15,10 @@ pub enum ContextPage {
     About,
     /// Settings [`ContextPage`] of the application
     Settings,
+    /// Headings of the current document
+    Outline,
+    /// Search across the whole vault
+    VaultSearch,
 }
 
 impl ContextPage {
@@ -35,6 +39,16 @@ impl ContextPage {
                 Message::ToggleContextPage(ContextPage::Settings),
             )
             .title(fl!("settings")),
+            ContextPage::Outline => context_drawer::context_drawer(
+                app_model.outline_view(),
+                Message::ToggleContextPage(ContextPage::Outline),
+            )
+            .title(fl!("outline")),
+            ContextPage::VaultSearch => context_drawer::context_drawer(
+                app_model.vault_search_view(),
+                Message::ToggleContextPage(ContextPage::VaultSearch),
+            )
+            .title(fl!("search-vault")),
         })
     }
 

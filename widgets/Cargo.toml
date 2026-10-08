@@ -7,3 +7,15 @@ description = "Additional widgets for Cedilla"
 
 [dependencies]
 libcosmic.workspace = true
+# Same syntect/two-face versions libcosmic's iced highlighter uses, so the
+# syntax set and theme types are shared.
+syntect = { version = "5.3", default-features = false, features = [
+    "parsing",
+    "default-themes",
+    "plist-load",
+    "dump-load",
+    "regex-fancy",
+] }
+two-face = { version = "0.4", default-features = false, features = [
+    "syntect-default-fancy",
+] }

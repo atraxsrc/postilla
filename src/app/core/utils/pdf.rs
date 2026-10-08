@@ -102,7 +102,7 @@ fn escape_html(input: &str) -> String {
 
 /// Converts the markdown to HTML, replacing typst and mermaid code blocks
 /// with embedded images (or an escaped code block if they can't be rendered).
-fn replace_special_blocks(content: &str) -> String {
+pub fn markdown_to_html_body(content: &str) -> String {
     use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd, html};
 
     let mut current: Option<Special> = None;
@@ -167,12 +167,9 @@ fn replace_special_blocks(content: &str) -> String {
     out
 }
 
-pub async fn export_pdf(
-    client: gotenberg_pdf::Client,
-    file_path: Option<PathBuf>,
-    file_content: String,
-    file_destination_path: String,
-) -> Result<(), anywho::Error> {
+/// Renders a markdown document to a complete, standalone HTML document.
+/// Local images are embedded as data URIs.
+pub async fn markdown_to_html_document(file_path: Option<PathBuf>, content: &str) -> String {
     let (title, base_dir) = match &file_path {
         Some(path) => {
             let title = path
@@ -185,30 +182,70 @@ pub async fn export_pdf(
         None => ("Document".to_string(), PathBuf::from(".")),
     };
 
-    let md_html = replace_special_blocks(&file_content);
+    let md_html = markdown_to_html_body(content);
     let md_html = embed_local_images(&md_html, &base_dir).await;
+    let title = escape_html(&title);
 
-    let full_html = format!(
+    format!(
         r#"<!doctype html>
-            <html lang="en">
-            <head>
-                <meta charset="utf-8">
-                <title>{title}</title>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-                <script>hljs.highlightAll();</script>
-                <style>
-                    img {{
-                        max-width: 100%;
-                        height: auto;
-                    }}
-                </style>
-            </head>
-            <body>
-                {md_html}
-            </body>
-        </html>"#
-    );
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{title}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        :root {{ color-scheme: light dark; }}
+        body {{
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 52rem;
+            margin: 2rem auto;
+            padding: 0 1.25rem;
+        }}
+        img {{ max-width: 100%; height: auto; }}
+        pre {{ overflow-x: auto; padding: 1rem; border-radius: 6px; background: rgba(127, 127, 127, 0.12); }}
+        code {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.95em; }}
+        :not(pre) > code {{ padding: 0.1em 0.3em; border-radius: 4px; background: rgba(127, 127, 127, 0.15); }}
+        blockquote {{ margin: 0; padding-left: 1rem; border-left: 4px solid rgba(127, 127, 127, 0.5); opacity: 0.9; }}
+        table {{ border-collapse: collapse; }}
+        th, td {{ border: 1px solid rgba(127, 127, 127, 0.4); padding: 0.4rem 0.7rem; }}
+        hr {{ border: none; border-top: 1px solid rgba(127, 127, 127, 0.4); }}
+        a {{ color: #2a7ae2; }}
+        @media print {{ body {{ margin: 0; max-width: none; }} }}
+    </style>
+</head>
+<body>
+{md_html}
+</body>
+</html>"#
+    )
+}
+
+/// Writes the document as a standalone HTML file
+pub async fn export_html(
+    file_path: Option<PathBuf>,
+    file_content: String,
+    file_destination_path: String,
+) -> Result<(), anywho::Error> {
+    let html = markdown_to_html_document(file_path, &file_content).await;
+
+    tokio::fs::write(file_destination_path, html)
+        .await
+        .map_err(|e| anywho::anywho!("{e}"))?;
+
+    Ok(())
+}
+
+pub async fn export_pdf(
+    client: gotenberg_pdf::Client,
+    file_path: Option<PathBuf>,
+    file_content: String,
+    file_destination_path: String,
+) -> Result<(), anywho::Error> {
+    let full_html = markdown_to_html_document(file_path, &file_content).await;
 
     let options = gotenberg_pdf::WebOptions {
         skip_network_idle_events: Some(false),

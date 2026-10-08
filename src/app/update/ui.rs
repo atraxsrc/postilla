@@ -28,8 +28,35 @@ impl AppModel {
         }
     }
 
+    /// Writes text to the system clipboard. The system clipboard (arboard) is
+    /// tried first, the toolkit clipboard is the fallback.
+    pub fn clipboard_write(&mut self, content: String) -> Task<cosmic::Action<Message>> {
+        if let Some(clipboard) = &mut self.clipboard {
+            match clipboard.set_text(content.clone()) {
+                Ok(()) => return Task::none(),
+                Err(err) => eprintln!("system clipboard write failed: {err}"),
+            }
+        }
+
+        iced::clipboard::write(content)
+    }
+
+    /// Reads text from the system clipboard synchronously, if possible
+    pub fn clipboard_read(&mut self) -> Option<String> {
+        let clipboard = self.clipboard.as_mut()?;
+        match clipboard.get_text() {
+            Ok(text) => Some(text),
+            Err(err) => {
+                eprintln!("system clipboard read failed: {err}");
+                None
+            }
+        }
+    }
+
     pub fn handle_copy_to_clipboard(&mut self, content: String) -> Task<cosmic::Action<Message>> {
-        iced::clipboard::write(content).chain(self.handle_add_toast(CedillaToast::new(fl!("copied-to-clipboard"))))
+        let write = self.clipboard_write(content);
+        let toast = self.handle_add_toast(CedillaToast::new(fl!("copied-to-clipboard")));
+        write.chain(toast)
     }
 
     pub fn handle_toggle_context_page(
@@ -54,6 +81,23 @@ impl AppModel {
 
     pub fn handle_modifiers(&mut self, modifiers: Modifiers) -> Task<cosmic::Action<Message>> {
         self.modifiers = modifiers;
+        Task::none()
+    }
+
+    /// Toggles the distraction free mode
+    pub fn handle_toggle_zen_mode(&mut self) -> Task<cosmic::Action<Message>> {
+        self.zen_mode = !self.zen_mode;
+
+        if self.zen_mode {
+            self.zen_restore_nav = self.core.nav_bar_active();
+            self.core.nav_bar_set_toggled(false);
+            self.core.window.show_headerbar = false;
+            self.core.window.show_context = false;
+        } else {
+            self.core.nav_bar_set_toggled(self.zen_restore_nav);
+            self.core.window.show_headerbar = true;
+        }
+
         Task::none()
     }
 }

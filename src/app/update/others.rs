@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 use crate::app::core::utils::{self, CedillaToast};
-use crate::app::{AppModel, DiscardChangesAction, Message, PreviewState, State, dialogs};
+use crate::app::{AppModel, DiscardChangesAction, Message, State, dialogs};
 use crate::config::ShowState;
+use crate::fl;
 use cosmic::prelude::*;
 use std::path::Path;
 use std::process;
@@ -20,10 +21,7 @@ impl AppModel {
     }
 
     pub fn handle_export_pdf(&mut self) -> Task<cosmic::Action<Message>> {
-        let State::Ready {
-            editor, ..
-        } = &mut self.state
-        else {
+        let State::Ready { editor, .. } = &mut self.state else {
             return Task::none();
         };
 
@@ -46,9 +44,9 @@ impl AppModel {
                 },
                 |res| match res {
                     Some(result) => match result {
-                        Ok(_) => cosmic::action::app(Message::AddToast(CedillaToast::new(
-                            "Exported Correctly",
-                        ))),
+                        Ok(_) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
+                            "pdf-exported"
+                        )))),
                         Err(e) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
                     },
                     None => cosmic::action::none(),
@@ -59,31 +57,78 @@ impl AppModel {
         }
     }
 
+    /// Exports the current document as a standalone HTML file
+    pub fn handle_export_html(&mut self) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &self.state else {
+            return Task::none();
+        };
+
+        let content = editor.content.text();
+        if content.trim().is_empty() {
+            return Task::none();
+        }
+
+        let file_path = editor.path.clone();
+        let suggested_name = file_path
+            .as_ref()
+            .and_then(|p| p.file_stem())
+            .map(|s| format!("{}.html", s.to_string_lossy()));
+
+        Task::perform(
+            async move {
+                match utils::files::open_html_file_saver(suggested_name).await {
+                    Some(destination) => {
+                        Some(utils::pdf::export_html(file_path, content, destination).await)
+                    }
+                    None => None,
+                }
+            },
+            |res| match res {
+                Some(Ok(())) => cosmic::action::app(Message::AddToast(CedillaToast::new(fl!(
+                    "html-exported"
+                )))),
+                Some(Err(e)) => cosmic::action::app(Message::AddToast(CedillaToast::new(e))),
+                None => cosmic::action::none(),
+            },
+        )
+    }
+
+    /// Copies the current document as HTML to the clipboard
+    pub fn handle_copy_html(&mut self) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &self.state else {
+            return Task::none();
+        };
+
+        let content = editor.content.text();
+        let file_path = editor.path.clone();
+
+        Task::perform(
+            async move { utils::pdf::markdown_to_html_document(file_path, &content).await },
+            |html| cosmic::action::app(Message::CopyToClipboard(html)),
+        )
+    }
+
     pub fn handle_app_close_requested(&mut self) -> Task<cosmic::Action<Message>> {
         let State::Ready {
-            editor,
-            preview_state,
-            ..
+            editor, view_mode, ..
         } = &self.state
         else {
             return Task::none();
         };
 
         if let Some(handler) = &self.config_handler {
-            let current_preview_state = match preview_state {
-                PreviewState::Hidden => ShowState::Hide,
-                PreviewState::Shown => ShowState::Show,
+            let current_nav_state = if self.zen_mode {
+                self.zen_restore_nav
+            } else {
+                self.core.nav_bar_active()
+            };
+            let current_nav_state = if current_nav_state {
+                ShowState::Show
+            } else {
+                ShowState::Hide
             };
 
-            let current_nav_state = match self.core.nav_bar_active() {
-                true => ShowState::Show,
-                false => ShowState::Hide,
-            };
-
-            if let Err(err) = self
-                .config
-                .set_last_preview_showstate(handler, current_preview_state)
-            {
+            if let Err(err) = self.config.set_last_view_mode(handler, *view_mode) {
                 eprintln!("{err}");
             }
 
