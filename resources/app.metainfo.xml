@@ -46,22 +46,27 @@
     <screenshot type="default">
       <image>
         https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/main-dark.png</image>
-      <caption>Main Page (Dark)</caption>
+      <caption>Vault, editor and live preview (dark)</caption>
     </screenshot>
     <screenshot>
       <image>
         https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/main-light.png</image>
-      <caption>Main Page (Light)</caption>
+      <caption>Vault, editor and live preview (light)</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/typst-dark.png</image>
-      <caption>Typst Support (Dark)</caption>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/preview-dark.png</image>
+      <caption>Typst math and Mermaid diagrams in the preview</caption>
     </screenshot>
     <screenshot>
       <image>
-        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/mermaid-dark.png</image>
-      <caption>Mermaid Support (Dark)</caption>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/search-dark.png</image>
+      <caption>Full text search across the vault</caption>
+    </screenshot>
+    <screenshot>
+      <image>
+        https://raw.githubusercontent.com/atraxsrc/postilla/main/resources/screenshots/settings-dark.png</image>
+      <caption>Appearance and window settings</caption>
     </screenshot>
   </screenshots>
 

@@ -7,6 +7,8 @@
 
 <p>A <em>postilla</em> is a note written in the margin. This one is a fork of
 <a href="https://github.com/mariinkys/cedilla">Cedilla</a> by Alex Marín, grown into a full notes app.</p>
+
+<img src="./resources/screenshots/main-dark.png" width="800" alt="Postilla with the vault sidebar, the editor and the live preview side by side" />
 </div>
 
 ## Features
@@ -25,6 +27,27 @@
 - **Fully customizable syntax highlighting**: import TextMate/Sublime `.tmTheme` files, COSMIC Terminal color schemes or simple RON themes, and optionally paint the editor and the whole window with the theme colors
 - **Frosted glass** window effect with adjustable opacity and background color on COSMIC
 - **Typst** math and **Mermaid** diagrams inside code blocks
+
+## Screenshots
+
+The screenshots use the two bundled *Postilla Ink* and *Postilla Parchment* syntax themes, which paint the
+whole window with the colors of the logo (see [Syntax highlighting themes](#syntax-highlighting-themes)).
+
+| Light theme | Typst math and Mermaid diagrams |
+| --- | --- |
+| ![Editor and preview with the parchment theme](./resources/screenshots/main-light.png) | ![Preview rendering a Typst formula and a Mermaid flowchart](./resources/screenshots/preview-dark.png) |
+
+| Outline | Search in vault |
+| --- | --- |
+| ![Outline panel listing the headings of the note](./resources/screenshots/outline-dark.png) | ![Search results across every note of the vault](./resources/screenshots/search-dark.png) |
+
+| Settings | Editor context menu |
+| --- | --- |
+| ![Appearance and window settings](./resources/screenshots/settings-dark.png) | ![Right click menu with clipboard and formatting actions](./resources/screenshots/context-dark.png) |
+
+Zen mode (`F11`) leaves nothing but the text:
+
+![Zen mode, editor and preview without any bars](./resources/screenshots/zen-dark.png)
 
 ## Install
 
@@ -71,8 +94,10 @@ moved or copied. The Cedilla Flatpak keeps its vault in
 
 ## Syntax highlighting themes
 
-Postilla ships the usual built-in themes (Inspired GitHub, Ocean, Mocha, Eighties, Solarized...) and loads any
-theme placed in its themes folder (*Settings → Appearance → Themes folder*, or use *Import theme…*). Three
+Postilla ships the usual built-in themes (Inspired GitHub, Ocean, Mocha, Eighties, Solarized...), two themes in the
+colors of the logo ([`postilla-ink.ron`](./resources/themes/postilla-ink.ron) and
+[`postilla-parchment.ron`](./resources/themes/postilla-parchment.ron), import them from *Settings → Appearance*)
+and loads any theme placed in its themes folder (*Settings → Appearance → Themes folder*, or use *Import theme…*). Three
 formats are detected automatically:
 
 | Format | File | Notes |
