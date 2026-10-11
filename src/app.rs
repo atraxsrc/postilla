@@ -1442,6 +1442,21 @@ fn card_class<'a>(colors: Option<(Option<Color>, Option<Color>)>) -> theme::Cont
     }
 }
 
+/// A transparent container whose text takes the syntax theme foreground, if any
+fn foreground_class<'a>(foreground: Option<Color>) -> theme::Container<'a> {
+    match foreground {
+        Some(fg) => theme::Container::custom(move |theme| {
+            let mut style = <theme::Theme as cosmic::iced::widget::container::Catalog>::style(
+                theme,
+                &theme::Container::Transparent,
+            );
+            style.text_color = Some(fg);
+            style
+        }),
+        None => theme::Container::Transparent,
+    }
+}
+
 /// View of the header of this screen
 fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
     let MainViewParams {
@@ -1459,13 +1474,14 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
 
     let spacing = theme::active().cosmic().spacing;
 
-    // colors of the syntax theme, used when the user wants them for the editor
+    // colors of the syntax theme, used when the user wants them for the editor and preview panes
     let theme_bg = theme_colors
         .then(|| hl::theme_background(syntax_theme))
         .flatten();
     let theme_fg = theme_colors
         .then(|| hl::theme_foreground(syntax_theme))
         .flatten();
+    let theme_link = theme_colors.then(|| hl::theme_link(syntax_theme)).flatten();
     let editor_colors = theme_colors.then_some((theme_bg, theme_fg));
 
     let create_editor = move || {
@@ -1538,6 +1554,11 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                     .text_size(app_config.text_size)
                     .code_highlight_theme(syntax_theme)
                     .code_block_theme_colors(theme_colors)
+                    .style(frostmark::Style {
+                        text_color: theme_fg,
+                        link_color: theme_link,
+                        ..Default::default()
+                    })
                     .on_drawing_image(|info| {
                         if let Some(image) = preview.images.get(info.url).cloned() {
                             let mut img = widget::image(image);
@@ -1569,6 +1590,7 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
         .padding(spacing.space_xxs)
         .width(Length::Fill)
         .height(Length::Fill)
+        .class(foreground_class(theme_fg))
     };
 
     let create_title = |icon_name: &str, title: String| {
@@ -1613,7 +1635,7 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
             container(col.push(create_preview()))
                 .width(Length::Fill)
                 .height(Length::Fill)
-                .class(theme::Container::Card)
+                .class(card_class(editor_colors))
                 .into()
         }
         ViewMode::Split => {
@@ -1627,7 +1649,9 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                 let (pane_content, class): (Element<'a, Message>, theme::Container<'a>) =
                     match content {
                         PaneContent::Editor => (create_editor().into(), card_class(editor_colors)),
-                        PaneContent::Preview => (create_preview().into(), theme::Container::Card),
+                        PaneContent::Preview => {
+                            (create_preview().into(), card_class(editor_colors))
+                        }
                     };
 
                 let content = pane_grid::Content::new(pane_content).class(class);

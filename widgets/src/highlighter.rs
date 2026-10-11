@@ -32,6 +32,20 @@ static SYNTAXES: LazyLock<parsing::SyntaxSet> =
 static DEFAULT_THEMES: LazyLock<highlighting::ThemeSet> =
     LazyLock::new(highlighting::ThemeSet::load_defaults);
 
+/// Scopes of a link URL in the bundled Markdown syntax, outermost first. Themes
+/// declare their link color with `markup.underline.link`.
+static LINK_SCOPES: LazyLock<Vec<parsing::Scope>> = LazyLock::new(|| {
+    [
+        "text.html.markdown",
+        "meta.paragraph.markdown",
+        "meta.link.inline.markdown",
+        "markup.underline.link.markdown",
+    ]
+    .iter()
+    .filter_map(|scope| parsing::Scope::new(scope).ok())
+    .collect()
+});
+
 const LINES_PER_SNAPSHOT: usize = 50;
 
 /// The syntax set used by the highlighter (the extended `two-face` set).
@@ -254,6 +268,14 @@ pub fn theme_background(theme: &highlighting::Theme) -> Option<Color> {
 /// Foreground color declared by a theme, if any.
 pub fn theme_foreground(theme: &highlighting::Theme) -> Option<Color> {
     theme.settings.foreground.map(to_color)
+}
+
+/// Link color declared by a theme (its rule for markdown links), if any.
+pub fn theme_link(theme: &highlighting::Theme) -> Option<Color> {
+    highlighting::Highlighter::new(theme)
+        .style_mod_for_stack(&LINK_SCOPES)
+        .foreground
+        .map(to_color)
 }
 
 /// Whether a theme is dark, judged by the luminance of its background.

@@ -689,6 +689,54 @@ mod tests {
     }
 
     #[test]
+    fn link_color_comes_from_the_link_slot() {
+        let text = include_str!("../resources/themes/postilla-ink.ron");
+        let (_, theme) = parse_ron_theme(text, "fallback").unwrap();
+        let link = hl::theme_link(&theme).map(|c| c.into_rgba8());
+        assert_eq!(link, Some([0xB9, 0xC6, 0xE4, 0xFF]));
+    }
+
+    #[test]
+    fn no_link_color_without_a_link_rule() {
+        let text = r##"(name: "Plain", background: "#000000", foreground: "#ffffff")"##;
+        let (_, theme) = parse_ron_theme(text, "fallback").unwrap();
+        assert_eq!(hl::theme_link(&theme), None);
+    }
+
+    #[test]
+    fn link_color_matches_the_editor_link_highlight() {
+        use cosmic::iced::core::text::highlighter::Highlighter as _;
+
+        // Only the exact URL scope gets #123456, so querying the wrong scopes
+        // would return the plain `link` slot color instead
+        let text = r##"(
+            name: "Links",
+            link: "#b9c6e4",
+            scopes: { "markup.underline.link.markdown": "#123456" },
+        )"##;
+        let (_, theme) = parse_ron_theme(text, "fallback").unwrap();
+        let theme = hl::leak_theme(theme);
+
+        let line = "Read the [docs](https://example.com) here.";
+        let url = line.find("https").unwrap();
+        let mut highlighter = hl::Highlighter::new(&hl::Settings {
+            theme,
+            token: "md".to_string(),
+            font: cosmic::iced::Font::DEFAULT,
+        });
+        let editor_color = highlighter
+            .highlight_line(line)
+            .find(|(range, _)| range.contains(&url))
+            .and_then(|(_, highlight)| highlight.color());
+
+        assert_eq!(
+            editor_color.map(|c| c.into_rgba8()),
+            Some([0x12, 0x34, 0x56, 0xFF])
+        );
+        assert_eq!(hl::theme_link(theme), editor_color);
+    }
+
+    #[test]
     fn legacy_indices_map_to_iced_order() {
         assert_eq!(legacy_index_to_id(4).as_deref(), Some(DEFAULT_LIGHT));
         assert_eq!(legacy_index_to_id(2).as_deref(), Some(DEFAULT_DARK));
