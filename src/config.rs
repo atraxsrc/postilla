@@ -29,9 +29,9 @@ pub struct PostillaConfig {
     pub text_size: i32,
     pub light_highlighter_theme: SyntaxThemeId,
     pub dark_highlighter_theme: SyntaxThemeId,
-    /// Paint the editor and the preview code blocks with the colors of the
-    /// syntax highlighting theme (background/foreground) instead of the
-    /// application theme colors.
+    /// Paint the editor, the preview and the window background with the
+    /// colors of the syntax highlighting theme (background, foreground and
+    /// link color) instead of the application theme colors.
     pub highlighter_theme_colors: BoolState,
     pub selected_font_family: Option<String>,
     /// Frosted glass (blur behind the window) behaviour
@@ -400,7 +400,7 @@ pub enum ConfigInput {
     UpdateLightHighlighterTheme(usize),
     /// Update the highlighter theme for dark app themes (index in the theme registry)
     UpdateDarkHighlighterTheme(usize),
-    /// Use the highlighter theme colors for the editor background/foreground
+    /// Use the highlighter theme colors for the editor, the preview and the window background
     HighlighterThemeColors(BoolState),
     /// Pick a theme file (RON / tmTheme) to import into the themes folder
     ImportSyntaxTheme,

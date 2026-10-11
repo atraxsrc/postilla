@@ -122,8 +122,9 @@ formats are detected automatically:
 ```
 
 Pick a theme for light and for dark mode independently. Turn on *Use highlighter theme colors* to paint the
-editor, the preview code blocks and the window background with the theme's own colors (great with terminal
-themes). A fixed window color can also be set under *Settings → Window*.
+editor, the preview and the window background with the theme's own colors (great with terminal themes). The
+preview then takes its background, text and link colors from the theme (`background`, `foreground` and `link`
+in a Postilla theme). A fixed window color can also be set under *Settings → Window*.
 
 ## Frosted glass
 
