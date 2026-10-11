@@ -107,6 +107,11 @@
   </keywords>
 
   <releases>
+    <release version="0.2.1" date="2026-10-11">
+        <description>
+            <p>With "Use highlighter theme colors" on, the preview follows the highlighter theme: background, text, Typst math and links</p>
+        </description>
+    </release>
     <release version="0.2.0" date="2026-10-08">
         <description>
             <p>First Postilla release, forked from Cedilla 0.1.13</p>
