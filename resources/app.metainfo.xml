@@ -107,6 +107,12 @@
   </keywords>
 
   <releases>
+    <release version="0.2.2" date="2026-10-11">
+        <description>
+            <p>Reload themes and importing a theme update the window background right away</p>
+            <p>With "Use highlighter theme colors" on, the editor and preview follow the window opacity</p>
+        </description>
+    </release>
     <release version="0.2.1" date="2026-10-11">
         <description>
             <p>With "Use highlighter theme colors" on, the preview follows the highlighter theme: background, text, Typst math and links</p>
