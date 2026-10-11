@@ -1429,7 +1429,11 @@ fn card_class<'a>(colors: Option<(Option<Color>, Option<Color>)>) -> theme::Cont
                 &theme::Container::Card,
             );
             if let Some(bg) = background {
-                style.background = Some(cosmic::iced::Background::Color(bg));
+                // as see-through as the window background, which carries the opacity setting
+                style.background = Some(cosmic::iced::Background::Color(Color {
+                    a: bg.a * cosmic.bg_color().alpha,
+                    ..bg
+                }));
             }
             if let Some(fg) = foreground {
                 style.text_color = Some(fg);
@@ -1496,11 +1500,9 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                 .on_action(Message::Edit);
 
             let text_editor = if theme_colors {
+                // no background of its own, the pane behind paints it
                 text_editor.style(move |theme, status, is_code_block| {
                     let mut style = text_editor::default(theme, status, is_code_block);
-                    if let Some(bg) = theme_bg {
-                        style.background = cosmic::iced::Background::Color(bg);
-                    }
                     if let Some(fg) = theme_fg {
                         style.value = fg;
                         style.placeholder = fg;

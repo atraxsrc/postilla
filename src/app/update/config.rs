@@ -353,7 +353,12 @@ impl AppModel {
                             Ok(())
                         });
 
-                        self.handle_add_toast(PostillaToast::new(fl!("theme-imported", name = name)))
+                        let toast = self.handle_add_toast(PostillaToast::new(fl!(
+                            "theme-imported",
+                            name = name
+                        )));
+                        // the window background may follow the imported theme
+                        toast.chain(self.apply_theme())
                     }
                     Err(err) => self.handle_add_toast(PostillaToast::new(fl!(
                         "theme-import-failed",
@@ -367,7 +372,8 @@ impl AppModel {
             ConfigInput::ReloadSyntaxThemes => {
                 self.syntax_themes.reload_user_themes();
                 self.syntax_theme_names = self.syntax_themes.names();
-                Task::none()
+                // the window background may follow a theme that changed on disk
+                self.apply_theme()
             }
             ConfigInput::UpdateFont(index) => {
                 if let Some(name) = self.system_fonts.get(index).cloned() {

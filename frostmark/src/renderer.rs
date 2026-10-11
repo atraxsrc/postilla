@@ -42,7 +42,11 @@ impl CodeBlockStyle for cosmic::Theme {
         Box::new(move |theme: &cosmic::Theme, status, is_code_block| {
             let mut style = widgets::text_editor::default(theme, status, is_code_block);
             if let Some(bg) = background {
-                style.background = cosmic::iced::Background::Color(bg);
+                // as see-through as the window background, which carries the opacity setting
+                style.background = cosmic::iced::Background::Color(cosmic::iced::Color {
+                    a: bg.a * theme.cosmic().bg_color().alpha,
+                    ..bg
+                });
             }
             if let Some(fg) = foreground {
                 style.value = fg;
