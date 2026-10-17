@@ -27,6 +27,20 @@
 - **Fully customizable syntax highlighting**: import TextMate/Sublime `.tmTheme` files, COSMIC Terminal color schemes or simple RON themes, and optionally paint the editor and the whole window with the theme colors
 - **Frosted glass** window effect with adjustable opacity and background color on COSMIC
 - **Typst** math and **Mermaid** diagrams inside code blocks
+- Opens Markdown, plain text, log, JSON, YAML and TOML files (see [Supported file types](#supported-file-types))
+
+## Supported file types
+
+| Kind | Extensions | Preview |
+| --- | --- | --- |
+| Markdown | `.md`, `.markdown`, `.mdown`, `.mkd`, `.mdx` | Rendered Markdown |
+| Text | `.txt`, `.text`, `.log` | Raw text |
+| Data | `.json`, `.yaml`, `.yml`, `.toml` | Raw text with syntax highlighting |
+
+Extensions match in any case (`.MD`, `.Json`). Each of these files shows up in the vault sidebar and vault search,
+can be picked in the *Open* and *Save* dialogs, and opens from *Open with* in the file manager. The outline only
+lists headings of Markdown files. New notes are created as `.md`, and PDF and HTML export treat the file as
+Markdown.
 
 ## Screenshots
 
