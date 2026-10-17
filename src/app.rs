@@ -14,6 +14,7 @@ use crate::config::{
     AUTOSAVE_DELAYS, AppTheme, BoolState, CONFIG_VERSION, PostillaConfig, ConfigInput,
     FrostedGlass, MIN_WINDOW_OPACITY, ShowState, ViewMode, autosave_labels,
 };
+use crate::file_types;
 use crate::key_binds::key_binds;
 use crate::syntax_theme::ThemeRegistry;
 use crate::{fl, icons};
@@ -1257,7 +1258,12 @@ impl AppModel {
             return text(fl!("loading")).into();
         };
 
-        let headings = utils::outline::headings(&editor.content.text());
+        // `#` lines in YAML or TOML are comments, not headings
+        let headings = if file_types::is_markdown(editor.path.as_deref()) {
+            utils::outline::headings(&editor.content.text())
+        } else {
+            Vec::new()
+        };
         if headings.is_empty() {
             return container(text::body(fl!("no-headings")))
                 .padding(spacing.space_s)
@@ -1516,12 +1522,7 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
             let text_editor = text_editor.highlight_with::<hl::Highlighter>(
                 hl::Settings {
                     theme: syntax_theme,
-                    token: editor
-                        .path
-                        .as_ref()
-                        .and_then(|path| path.extension()?.to_str())
-                        .unwrap_or("md")
-                        .to_string(),
+                    token: file_types::highlight_token(editor.path.as_deref()),
                     font,
                 },
                 |highlight, _theme| highlight.to_format(),

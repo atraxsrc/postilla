@@ -1,7 +1,10 @@
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 use cosmic::widget::{image, svg};
 use frostmark::MarkState;
+
+use crate::file_types;
 
 pub struct MarkdownPreview {
     /// Markdown Preview state
@@ -15,8 +18,8 @@ pub struct MarkdownPreview {
 }
 
 impl MarkdownPreview {
-    pub fn update_content(&mut self, text: &str) {
-        self.markstate = MarkState::with_html_and_markdown(text);
+    pub fn update_content(&mut self, path: Option<&Path>, text: &str) {
+        self.markstate = MarkState::with_html_and_markdown(&file_types::preview_source(path, text));
     }
 
     pub fn insert_image(&mut self, url: String, bytes: Vec<u8>) {

@@ -7,6 +7,7 @@ use crate::app::core::utils::{self, PostillaToast};
 use crate::app::{AppModel, Message, State, editor_scrollable_id, preview_scrollable_id};
 use crate::app::{DiscardChangesAction, create_default_panes};
 use crate::config::{BoolState, ViewMode};
+use crate::file_types;
 use cosmic::iced::widget::scrollable::scroll_to;
 use cosmic::prelude::*;
 use frostmark::MarkState;
@@ -241,7 +242,10 @@ impl AppModel {
                 let panes = get_previous_pane_state(self);
                 let view_mode = get_previous_view_mode(self);
 
-                let markstate = MarkState::with_html_and_markdown(content.as_ref());
+                let markstate = MarkState::with_html_and_markdown(&file_types::preview_source(
+                    Some(&path),
+                    content.as_ref(),
+                ));
                 let images_in_progress = HashSet::new();
 
                 self.state = State::Ready {

@@ -5,6 +5,7 @@ use std::sync::Mutex;
 
 mod app;
 mod config;
+mod file_types;
 mod flags;
 mod i18n;
 mod icons;

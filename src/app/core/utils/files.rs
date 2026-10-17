@@ -4,6 +4,8 @@ use anywho::anywho;
 use cosmic::dialog::{ashpd::desktop::file_chooser::SelectedFiles, file_chooser::FileFilter};
 use std::{path::PathBuf, sync::Arc};
 
+use crate::file_types;
+
 pub async fn load_file(path: PathBuf) -> Result<(PathBuf, Arc<String>), anywho::Error> {
     let decoded = percent_encoding::percent_decode_str(path.to_str().unwrap_or_default())
         .decode_utf8()
@@ -137,12 +139,7 @@ pub async fn open_markdown_file_picker() -> Option<String> {
         .accept_label("Open")
         .modal(true)
         .multiple(false)
-        .filter(
-            FileFilter::new("Markdown Files")
-                .glob("*.md")
-                .glob("*.txt")
-                .glob("*.MD"),
-        )
+        .filter(file_types::file_filter())
         .send()
         .await
         .unwrap()
@@ -169,12 +166,7 @@ pub async fn open_markdown_file_saver(vault_path: String) -> Option<String> {
         .modal(true)
         .current_folder(vault_path)
         .unwrap_or_default()
-        .filter(
-            FileFilter::new("Markdown Files")
-                .glob("*.md")
-                .glob("*.txt")
-                .glob("*.MD"),
-        )
+        .filter(file_types::file_filter())
         .send()
         .await
         .unwrap()

@@ -6,6 +6,8 @@ use grep::matcher::Matcher;
 use grep::regex::RegexMatcherBuilder;
 use grep::searcher::{Searcher, sinks::UTF8};
 
+use crate::file_types;
+
 /// Maximum number of results returned by a vault search
 pub const MAX_RESULTS: usize = 300;
 /// Maximum length (in chars) of a result snippet
@@ -73,11 +75,7 @@ pub fn search_vault(root: &Path, query: &str, use_regex: bool) -> Result<Vec<Vau
             continue;
         }
         let path = entry.path();
-        let is_note = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("txt"));
-        if !is_note {
+        if !file_types::is_supported(path) {
             continue;
         }
 

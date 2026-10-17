@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::config::PostillaConfig;
+use crate::file_types;
 use cosmic::cosmic_config;
 
 /// Flags given to our COSMIC application to use in it's "init" function.
@@ -35,7 +36,7 @@ fn check_open_with_file() -> Option<PathBuf> {
             .decode_utf8_lossy()
             .into_owned();
 
-        if is_markdown_file(&decoded) {
+        if file_types::is_supported(std::path::Path::new(&decoded)) {
             Some(PathBuf::from(decoded))
         } else {
             None
@@ -51,16 +52,4 @@ fn load_system_fonts() -> Vec<String> {
     names.sort();
     names.dedup();
     names
-}
-
-fn is_markdown_file(path: &str) -> bool {
-    std::path::Path::new(path)
-        .extension()
-        .and_then(|s| s.to_str())
-        .map(|ext| {
-            ["md", "markdown"]
-                .iter()
-                .any(|e| ext.eq_ignore_ascii_case(e))
-        })
-        .unwrap_or(false)
 }

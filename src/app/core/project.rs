@@ -14,6 +14,7 @@ use std::{
 
 use crate::{
     app::AppModel,
+    file_types,
     icons::{self},
 };
 
@@ -54,9 +55,8 @@ impl AppModel {
                 continue;
             }
             if entry.file_type().is_some_and(|ft| ft.is_file()) {
-                match entry.path().extension().and_then(std::ffi::OsStr::to_str) {
-                    Some("md") | Some("txt") => {}
-                    _ => continue,
+                if !file_types::is_supported(entry.path()) {
+                    continue;
                 }
             }
             let node = match ProjectNode::new(entry.path()) {

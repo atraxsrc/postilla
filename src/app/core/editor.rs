@@ -111,7 +111,7 @@ impl EditorState {
             );
 
             self.content.replace_text(&snapshot);
-            preview.update_content(&snapshot);
+            preview.update_content(self.path.as_deref(), &snapshot);
 
             self.is_dirty =
                 self.history.history_index != 0 || !self.history.history_base.trim().is_empty();
@@ -136,7 +136,7 @@ impl EditorState {
             );
 
             self.content.replace_text(&snapshot);
-            preview.update_content(&snapshot);
+            preview.update_content(self.path.as_deref(), &snapshot);
 
             self.restore_cursor(line, col);
         }
