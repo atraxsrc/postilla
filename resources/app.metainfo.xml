@@ -107,6 +107,13 @@
   </keywords>
 
   <releases>
+    <release version="0.2.3" date="2026-10-18">
+        <description>
+            <p>Open plain text, log, JSON, YAML and TOML files, from "Open with", the file dialogs, the vault and vault search</p>
+            <p>Files that are not Markdown show their raw, highlighted text in the preview</p>
+            <p>.mdown, .mkd and .mdx files open as Markdown</p>
+        </description>
+    </release>
     <release version="0.2.2" date="2026-10-11">
         <description>
             <p>Reload themes and importing a theme update the window background right away</p>
