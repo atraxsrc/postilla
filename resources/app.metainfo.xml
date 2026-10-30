@@ -107,6 +107,15 @@
   </keywords>
 
   <releases>
+    <release version="0.2.4" date="2026-10-31">
+        <description>
+            <p>Export as PDF suggests the note name, the Open dialog starts in the vault and the file dialogs no longer crash the app when the portal is unavailable</p>
+            <p>Rename opens with the current name, and renaming or creating a note keeps a typed extension instead of forcing .md</p>
+            <p>Escape closes the find box and the side panels, search in the note ignores case like the vault search</p>
+            <p>Bold, italic, code and link on an empty cursor leave the caret between the markers; undo and redo keep the cursor in view and are in the right-click menu</p>
+            <p>Exporting an empty note says so, autosave waits while a dialog is open, importing a theme from the themes folder no longer empties it, and deleting names the file or folder</p>
+        </description>
+    </release>
     <release version="0.2.3" date="2026-10-18">
         <description>
             <p>Open plain text, log, JSON, YAML and TOML files, from "Open with", the file dialogs, the vault and vault search</p>
