@@ -241,6 +241,9 @@ pub fn editor_context_menu(
     menu::items(
         key_binds,
         vec![
+            menu::Item::Button(fl!("undo"), None, MenuAction::Undo),
+            menu::Item::Button(fl!("redo"), None, MenuAction::Redo),
+            menu::Item::Divider,
             menu::Item::Button(fl!("cut"), None, MenuAction::Cut),
             menu::Item::Button(fl!("copy"), None, MenuAction::Copy),
             menu::Item::Button(fl!("paste"), None, MenuAction::Paste),

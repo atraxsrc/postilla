@@ -132,17 +132,19 @@ async fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<(), anywho::
     Ok(())
 }
 
-/// Open a system dialog to select a markdown file, returns the selected file (if any)
-pub async fn open_markdown_file_picker() -> Option<String> {
+/// Open a system dialog to select a supported file, returns the selected file (if any)
+pub async fn open_markdown_file_picker(vault_path: String) -> Option<String> {
     let result = SelectedFiles::open_file()
-        .title("Select Markdown File")
+        .title("Open File")
         .accept_label("Open")
         .modal(true)
         .multiple(false)
+        .current_folder(vault_path)
+        .unwrap_or_default()
         .filter(file_types::file_filter())
         .send()
         .await
-        .unwrap()
+        .ok()?
         .response();
 
     if let Ok(result) = result {
@@ -169,7 +171,7 @@ pub async fn open_markdown_file_saver(vault_path: String) -> Option<String> {
         .filter(file_types::file_filter())
         .send()
         .await
-        .unwrap()
+        .ok()?
         .response();
 
     if let Ok(result) = result {
@@ -185,17 +187,19 @@ pub async fn open_markdown_file_saver(vault_path: String) -> Option<String> {
     }
 }
 
-/// Open a system dialog to select where to save a markdown file, returns the selected file (if any)
-pub async fn open_pdf_file_saver() -> Option<String> {
-    let result = SelectedFiles::save_file()
-        .title("Save File")
-        .accept_label("Save")
+/// Open a system dialog to select where to save a PDF file, returns the selected file (if any)
+pub async fn open_pdf_file_saver(suggested_name: Option<String>) -> Option<String> {
+    let mut request = SelectedFiles::save_file()
+        .title("Export PDF")
+        .accept_label("Export")
         .modal(true)
-        .filter(FileFilter::new("PDF Files").glob("*.pdf"))
-        .send()
-        .await
-        .unwrap()
-        .response();
+        .filter(FileFilter::new("PDF Files").glob("*.pdf"));
+
+    if let Some(name) = suggested_name {
+        request = request.current_name(Some(name.as_str()));
+    }
+
+    let result = request.send().await.ok()?.response();
 
     if let Ok(result) = result {
         result
@@ -221,7 +225,7 @@ pub async fn open_folder_picker(vault_path: String) -> Option<String> {
         .unwrap_or_default()
         .send()
         .await
-        .unwrap()
+        .ok()?
         .response();
 
     if let Ok(result) = result {

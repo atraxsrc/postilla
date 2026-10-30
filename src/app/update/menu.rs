@@ -33,18 +33,21 @@ impl AppModel {
                     task
                 }
             }
-            MenuAction::OpenFile => Task::perform(
-                async move {
-                    match utils::files::open_markdown_file_picker().await {
-                        Some(path) => Some(utils::files::load_file(path.into()).await),
-                        None => None,
-                    }
-                },
-                |res| match res {
-                    Some(result) => cosmic::action::app(Message::OpenFile(result)),
-                    None => cosmic::action::none(),
-                },
-            ),
+            MenuAction::OpenFile => {
+                let vault_path = self.config.vault_path.clone();
+                Task::perform(
+                    async move {
+                        match utils::files::open_markdown_file_picker(vault_path).await {
+                            Some(path) => Some(utils::files::load_file(path.into()).await),
+                            None => None,
+                        }
+                    },
+                    |res| match res {
+                        Some(result) => cosmic::action::app(Message::OpenFile(result)),
+                        None => cosmic::action::none(),
+                    },
+                )
+            }
             MenuAction::NewFile => self.handle_new_file(),
             MenuAction::NewVaultFile => {
                 self.handle_dialog_action(dialogs::DialogAction::OpenNewVaultFileDialog)
@@ -113,6 +116,15 @@ impl AppModel {
             MenuAction::Table => self.handle_apply_formatting(SelectionAction::Table),
             MenuAction::CloseCurrentDialog => {
                 if self.dialog_pages.is_empty() {
+                    if let State::Ready { editor, .. } = &self.state
+                        && editor.search.show_search_box
+                    {
+                        return self.handle_search(utils::search::SearchAction::ToggleSearch);
+                    }
+                    if self.core.window.show_context {
+                        self.core.window.show_context = false;
+                        return Task::none();
+                    }
                     if self.zen_mode {
                         return self.handle_toggle_zen_mode();
                     }

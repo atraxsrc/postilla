@@ -102,7 +102,7 @@ impl AppModel {
             return Task::none();
         };
 
-        if editor.path.is_none() || !editor.is_dirty {
+        if editor.path.is_none() || !editor.is_dirty || !self.dialog_pages.is_empty() {
             return Task::none();
         }
 
@@ -343,12 +343,14 @@ impl AppModel {
 
         editor.undo(preview);
 
+        let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
+        let cursor_task = ensure_cursor_visible(editor, sync_preview);
         let download = utils::images::download_images(
             &mut preview.markstate,
             &mut preview.images_in_progress,
             &editor.path,
         );
-        Task::batch([download, self.schedule_autosave()])
+        Task::batch([download, cursor_task, self.schedule_autosave()])
     }
 
     pub fn handle_redo(&mut self) -> Task<cosmic::Action<Message>> {
@@ -361,12 +363,14 @@ impl AppModel {
 
         editor.redo(preview);
 
+        let sync_preview = self.config.scrollbar_sync == BoolState::Yes;
+        let cursor_task = ensure_cursor_visible(editor, sync_preview);
         let download = utils::images::download_images(
             &mut preview.markstate,
             &mut preview.images_in_progress,
             &editor.path,
         );
-        Task::batch([download, self.schedule_autosave()])
+        Task::batch([download, cursor_task, self.schedule_autosave()])
     }
 
     pub fn handle_search(&mut self, action: SearchAction) -> Task<cosmic::Action<Message>> {

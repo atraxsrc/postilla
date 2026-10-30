@@ -55,6 +55,7 @@ impl EditorSearchState {
         // fixed_strings(true) gives literal search; false gives full regex.
         let matcher = match RegexMatcherBuilder::new()
             .fixed_strings(!self.use_regex)
+            .case_insensitive(true)
             .build(&self.search_value)
         {
             Ok(m) => m,

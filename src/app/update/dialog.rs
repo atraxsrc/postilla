@@ -18,6 +18,14 @@ impl AppModel {
         action.execute(&mut self.dialog_pages, &self.dialog_state)
     }
 
+    /// Name of a vault node as shown in the sidebar
+    fn node_display_name(&self, entity: segmented_button::Entity) -> String {
+        self.nav_model
+            .data::<crate::app::core::project::ProjectNode>(entity)
+            .map(|node| node.name().to_string())
+            .unwrap_or_default()
+    }
+
     pub fn handle_nav_bar_context(
         &mut self,
         entity: segmented_button::Entity,
@@ -34,10 +42,27 @@ impl AppModel {
 
         match action {
             NavMenuAction::DeleteNode(entity) => {
-                self.handle_dialog_action(dialogs::DialogAction::OpenDeleteNodeDialog(entity))
+                let name = self.node_display_name(entity);
+                self.handle_dialog_action(dialogs::DialogAction::OpenDeleteNodeDialog(
+                    entity, name,
+                ))
             }
             NavMenuAction::RenameNode(entity) => {
-                self.handle_dialog_action(dialogs::DialogAction::OpenRenameNodeDialog(entity))
+                // pre-fill the current name, without the extension for files
+                let name = match self
+                    .nav_model
+                    .data::<crate::app::core::project::ProjectNode>(entity)
+                {
+                    Some(crate::app::core::project::ProjectNode::File { path, .. }) => path
+                        .file_stem()
+                        .map(|s| s.to_string_lossy().into_owned())
+                        .unwrap_or_default(),
+                    Some(node) => node.name().to_string(),
+                    None => String::new(),
+                };
+                self.handle_dialog_action(dialogs::DialogAction::OpenRenameNodeDialog(
+                    entity, name,
+                ))
             }
             NavMenuAction::MoveNode(entity) => {
                 let vault_path = self.config.vault_path();

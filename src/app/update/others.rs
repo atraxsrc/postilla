@@ -28,14 +28,18 @@ impl AppModel {
 
         let content = editor.content.text();
         if content.trim().is_empty() {
-            return Task::none();
+            return self.handle_add_toast(PostillaToast::new(fl!("nothing-to-export")));
         }
 
         let file_path = editor.path.clone();
+        let suggested_name = file_path
+            .as_ref()
+            .and_then(|p| p.file_stem())
+            .map(|s| format!("{}.pdf", s.to_string_lossy()));
 
         Task::perform(
             async move {
-                match utils::files::open_pdf_file_saver().await {
+                match utils::files::open_pdf_file_saver(suggested_name).await {
                     Some(destination) => {
                         Some(utils::typst_export::export_pdf(file_path, content, destination).await)
                     }
@@ -79,7 +83,7 @@ impl AppModel {
 
         let content = editor.content.text();
         if content.trim().is_empty() {
-            return Task::none();
+            return self.handle_add_toast(PostillaToast::new(fl!("nothing-to-export")));
         }
 
         let file_path = editor.path.clone();

@@ -65,12 +65,20 @@ impl AppModel {
             ProjectNode::File { path, .. } | ProjectNode::Folder { path, .. } => path.clone(),
         };
 
+        let new_name = new_name.trim().to_string();
+        if new_name.is_empty() {
+            return Task::none();
+        }
         let new_name = match &node {
             ProjectNode::File { .. } => {
-                if new_name.ends_with(".md") {
+                if crate::file_types::is_supported(std::path::Path::new(&new_name)) {
                     new_name
                 } else {
-                    format!("{}.md", new_name)
+                    // keep the file type the note already has
+                    match old_path.extension().and_then(|e| e.to_str()) {
+                        Some(ext) => format!("{new_name}.{ext}"),
+                        None => format!("{new_name}.md"),
+                    }
                 }
             }
             ProjectNode::Folder { .. } => new_name,

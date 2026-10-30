@@ -12,7 +12,7 @@ use cosmic::iced::widget::scrollable::scroll_to;
 use cosmic::prelude::*;
 use frostmark::MarkState;
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use widgets::text_editor;
 
@@ -103,15 +103,32 @@ impl AppModel {
     pub fn handle_new_vault_file(&mut self, file_name: String) -> Task<cosmic::Action<Message>> {
         let dir = self.selected_directory();
 
+        let file_name = file_name.trim();
+        if file_name.is_empty() {
+            return Task::none();
+        }
+
+        // "todo.md" or "notes.txt" are kept as typed, anything else becomes a Markdown note
+        let (stem, ext) = if crate::file_types::is_supported(Path::new(file_name)) {
+            let path = Path::new(file_name);
+            let part = |s: Option<&std::ffi::OsStr>| {
+                s.map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default()
+            };
+            (part(path.file_stem()), part(path.extension()))
+        } else {
+            (file_name.to_string(), String::from("md"))
+        };
+
         // find a name that doesn't already exist
         let file_path = {
-            let base = dir.join(format!("{}.md", file_name));
+            let base = dir.join(format!("{stem}.{ext}"));
             if !base.exists() {
                 base
             } else {
                 let mut i = 1;
                 loop {
-                    let candidate = dir.join(format!("{}-{}.md", file_name, i));
+                    let candidate = dir.join(format!("{stem}-{i}.{ext}"));
                     if !candidate.exists() {
                         break candidate;
                     }

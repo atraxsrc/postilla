@@ -23,7 +23,7 @@ preview = Preview
 file-name = File Name
 folder-name = Folder Name
 delete-node = Delete File/Folder
-delete-confirmation = Are you sure you want to delete this file/folder and it's contents?
+delete-confirmation = Are you sure you want to delete "{ $name }" and its contents?
 save-changes-closing = Save changes before closing?
 save-warning = You have unsaved changes. If you continue without saving, these changes will be lost.
 discard-changes = Discard Changes
@@ -120,6 +120,7 @@ export-html = Export as HTML…
 copy-html = Copy as HTML
 html-exported = Exported as HTML
 pdf-exported = Exported as PDF
+nothing-to-export = Nothing to export, the note is empty
 
 edit = Edit
 undo = Undo

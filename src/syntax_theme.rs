@@ -175,7 +175,13 @@ impl ThemeRegistry {
             .ok_or_else(|| anywho!("Invalid file name"))?;
         let destination = Self::user_dir().join(file_name);
 
-        std::fs::copy(source, &destination).map_err(|e| anywho!("{e}"))?;
+        // picking a file that already lives in the themes folder: copying a file
+        // onto itself would truncate it, so only reload
+        let same_file = destination.exists()
+            && source.canonicalize().ok() == destination.canonicalize().ok();
+        if !same_file {
+            std::fs::copy(source, &destination).map_err(|e| anywho!("{e}"))?;
+        }
         self.reload_user_themes();
 
         let stem = destination

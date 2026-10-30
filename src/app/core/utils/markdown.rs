@@ -85,6 +85,13 @@ impl AppModel {
                 .perform(text_editor::Action::Move(text_editor::Motion::Home));
         };
 
+        // where the caret should land inside an empty template, computed before `action` moves
+        let caret_offset = if selection.is_empty() {
+            caret_inside_template(&action)
+        } else {
+            None
+        };
+
         let formatted = format_selected_text(&selection, action);
         let formatted = formatted.trim_end_matches('\n').to_string();
         let formatted_len = formatted.chars().count();
@@ -100,6 +107,14 @@ impl AppModel {
             editor
                 .content
                 .perform(text_editor::Action::Move(text_editor::Motion::End));
+        } else if let Some(offset) = caret_offset {
+            // nothing selected: put the caret inside the inserted markers so typing
+            // lands between them instead of replacing them
+            for _ in 0..offset {
+                editor
+                    .content
+                    .perform(text_editor::Action::Move(text_editor::Motion::Left));
+            }
         } else {
             for _ in 0..formatted_len {
                 editor
@@ -118,6 +133,18 @@ impl AppModel {
         editor.is_dirty = true;
 
         Task::none()
+    }
+}
+
+/// For templates inserted on an empty selection, how many characters from the end
+/// the caret should land so it sits inside the markers (`**|**`, `[|](url)`)
+fn caret_inside_template(action: &SelectionAction) -> Option<usize> {
+    match action {
+        SelectionAction::Bold | SelectionAction::Strikethrough => Some(2),
+        SelectionAction::Italic | SelectionAction::Code => Some(1),
+        SelectionAction::Hyperlink => Some("](url)".len()),
+        SelectionAction::Image => Some("](image-url)".len()),
+        _ => None,
     }
 }
 
