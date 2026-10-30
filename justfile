@@ -102,5 +102,4 @@ tag version:
     cargo clean
     git add Cargo.lock
     git commit -m 'release: {{version}}'
-    git commit --amend
-    git tag -a {{version}} -m ''
+    git tag -a v{{version}} -m 'release: {{version}}'
