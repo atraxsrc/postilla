@@ -2195,7 +2195,7 @@ dependencies = [
 
 [[package]]
 name = "frostmark"
-version = "0.1.0"
+version = "0.2.5"
 dependencies = [
  "bitflags 2.13.2",
  "comrak",
@@ -5411,7 +5411,7 @@ dependencies = [
 
 [[package]]
 name = "postilla"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "anywho",
  "arboard",
@@ -8576,7 +8576,7 @@ dependencies = [
 
 [[package]]
 name = "widgets"
-version = "0.1.0"
+version = "0.2.5"
 dependencies = [
  "libcosmic",
  "syntect",
