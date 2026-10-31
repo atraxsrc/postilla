@@ -11,6 +11,21 @@ name = Name
 copied-to-clipboard = Copied to Clipboard
 file-saved = File Saved!
 untitled = Untitled
+vault = Vault
+
+<#-- File dialogs -->
+open = Open
+save = Save
+pick = Pick
+import = Import
+pick-folder = Pick Folder
+export-pdf-dialog = Export PDF
+export-html-dialog = Export HTML
+import-syntax-theme = Import Syntax Theme
+notes-and-text-files = Notes and Text Files
+pdf-files = PDF Files
+html-files = HTML Files
+syntax-theme-files = Syntax Themes
 
 <#-- About Page -->
 repository = Repository
@@ -28,9 +43,12 @@ save-changes-closing = Save changes before closing?
 save-warning = You have unsaved changes. If you continue without saving, these changes will be lost.
 discard-changes = Discard Changes
 file-changed-externally = The file has been changed externally
+file-deleted-externally = The file has been deleted externally
 reload = Reload File
 keep-my-version = Keep Current Version
+close-file = Close File
 modified-text = was modified by another program.
+deleted-text = was deleted or moved by another program. Keep the current version to write it back, or close it.
 loading-image = Loading image... (if this persists the app may not have permissions to read the file)
 words = { $count ->
     [one] 1 word
@@ -63,6 +81,12 @@ open-themes-folder = Themes folder
 reload-themes = Reload themes
 theme-imported = Imported theme: { $name }
 theme-import-failed = Could not import theme: { $error }
+themes-reloaded = { $count ->
+    [0] No custom themes found in the themes folder
+    [one] 1 custom theme loaded
+   *[other] { $count } custom themes loaded
+}
+settings-save-failed = Could not save the settings: { $error }
 
 <#-- Window -->
 window = Window
@@ -131,6 +155,7 @@ paste = Paste
 select-all = Select All
 paste-image = Paste Image
 no-image-clipboard = No image found in clipboard
+image-paste-failed = Could not paste the image: { $error }
 image-pasted = Image saved: { $name }
 insert-datetime = Insert Date & Time
 
@@ -152,6 +177,8 @@ bold = Bold
 italic = Italic
 link = Hyperlink
 code = Code
+math = Math
+heading = Heading
 image = Image
 attachment = Attachment
 bullet-list = Bulleted List

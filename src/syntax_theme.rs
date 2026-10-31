@@ -91,12 +91,14 @@ impl ThemeRegistry {
             }
         }
 
-        registry.reload_user_themes();
+        for error in registry.reload_user_themes() {
+            eprintln!("{error}");
+        }
         registry
     }
 
     /// The folder user themes are loaded from (created and seeded with the
-    /// example themes if missing).
+    /// example themes and the two Postilla themes if missing).
     pub fn user_dir() -> PathBuf {
         let dir = dirs::data_dir()
             .unwrap_or_else(std::env::temp_dir)
@@ -118,6 +120,14 @@ impl ThemeRegistry {
                     "example-cosmic-term.ron",
                     include_str!("../resources/themes/example-cosmic-term.ron"),
                 ),
+                (
+                    "postilla-ink.ron",
+                    include_str!("../resources/themes/postilla-ink.ron"),
+                ),
+                (
+                    "postilla-parchment.ron",
+                    include_str!("../resources/themes/postilla-parchment.ron"),
+                ),
             ];
             for (name, content) in examples {
                 let _ = std::fs::write(dir.join(name), content);
@@ -127,13 +137,15 @@ impl ThemeRegistry {
         dir
     }
 
-    /// Re-reads the user themes folder.
-    pub fn reload_user_themes(&mut self) {
+    /// Re-reads the user themes folder. Returns one message per file that
+    /// could not be loaded, so the caller can show them.
+    pub fn reload_user_themes(&mut self) -> Vec<String> {
         self.themes.retain(|t| t.path.is_none());
+        let mut errors = Vec::new();
 
         let dir = Self::user_dir();
         let Ok(entries) = std::fs::read_dir(&dir) else {
-            return;
+            return errors;
         };
 
         let mut paths: Vec<PathBuf> = entries
@@ -160,9 +172,11 @@ impl ThemeRegistry {
                         theme,
                     });
                 }
-                Err(err) => eprintln!("Ignoring theme {}: {err}", path.display()),
+                Err(err) => errors.push(format!("Ignoring theme {}: {err}", path.display())),
             }
         }
+
+        errors
     }
 
     /// Validates a theme file and copies it into the user themes folder.
@@ -182,7 +196,9 @@ impl ThemeRegistry {
         if !same_file {
             std::fs::copy(source, &destination).map_err(|e| anywho!("{e}"))?;
         }
-        self.reload_user_themes();
+        for error in self.reload_user_themes() {
+            eprintln!("{error}");
+        }
 
         let stem = destination
             .file_stem()

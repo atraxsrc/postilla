@@ -244,6 +244,24 @@ impl AppModel {
         )
     }
 
+    /// "Save" in the unsaved changes dialog: save first, then carry on with
+    /// closing the app or opening the other file.
+    pub fn handle_save_then_continue(
+        &mut self,
+        action: DiscardChangesAction,
+    ) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &self.state else {
+            return Task::none();
+        };
+
+        if !editor.is_dirty {
+            return self.handle_discard_changes(action);
+        }
+
+        self.pending_after_save = Some(action);
+        self.handle_save_file()
+    }
+
     pub fn handle_open_file(
         &mut self,
         result: Result<(PathBuf, Arc<String>), anywho::Error>,
@@ -336,6 +354,16 @@ impl AppModel {
 
                     editor.path = Some(new_path);
                     editor.is_dirty = false;
+                    editor.history.mark_saved();
+
+                    if std::mem::take(&mut self.rewatch_after_save) {
+                        self.watch_generation += 1;
+                    }
+
+                    if let Some(action) = self.pending_after_save.take() {
+                        self.silent_save = false;
+                        return self.handle_discard_changes(action);
+                    }
 
                     if std::mem::take(&mut self.silent_save) {
                         Task::none()
@@ -345,11 +373,14 @@ impl AppModel {
                 }
                 Err(e) => {
                     self.silent_save = false;
+                    self.pending_after_save = None;
                     self.handle_add_toast(PostillaToast::new(e))
                 }
             }
         } else {
+            // the save dialog was cancelled, stay on the current file
             self.silent_save = false;
+            self.pending_after_save = None;
             let State::Ready { editor, .. } = &mut self.state else {
                 return Task::none();
             };
@@ -372,7 +403,22 @@ impl AppModel {
                     cosmic::action::app(Message::OpenFile(res))
                 })
             }
+            DiscardChangesAction::CloseFile(path) => {
+                self.remove_nav_node(&path);
+                self.handle_new_file()
+            }
         }
+    }
+
+    /// Whether the "changed / deleted externally" dialog is already on screen
+    fn external_change_dialog_shown(&self) -> bool {
+        use crate::app::dialogs::DialogPage;
+        self.dialog_pages.iter().any(|d| {
+            matches!(
+                d,
+                DialogPage::ExternalFileModified(_) | DialogPage::ExternalFileRemoved(_)
+            )
+        })
     }
 
     pub fn handle_external_file_changed(&mut self, path: PathBuf) -> Task<cosmic::Action<Message>> {
@@ -386,15 +432,44 @@ impl AppModel {
         }
 
         let currently_open = editor.path.as_ref() == Some(&path);
-        let already_shown = self
-            .dialog_pages
-            .iter()
-            .any(|d| matches!(d, crate::app::dialogs::DialogPage::ExternalFileModified(_)));
-
-        if currently_open && !already_shown {
-            editor.is_dirty = true; // we mark it as dirty so if the file has been removed and we keep the current version it creates it again
+        if currently_open && !self.external_change_dialog_shown() {
+            let State::Ready { editor, .. } = &mut self.state else {
+                return Task::none();
+            };
+            // dirty so "keep my version" writes the editor text back, and no undo
+            // step matches the file on disk any more
+            editor.is_dirty = true;
+            editor.history.saved_index = None;
+            // the file may have been replaced (delete + rename), watch the new one
+            self.watch_generation += 1;
             self.dialog_pages
                 .push_back(crate::app::dialogs::DialogPage::ExternalFileModified(path));
+        }
+
+        Task::none()
+    }
+
+    pub fn handle_external_file_removed(&mut self, path: PathBuf) -> Task<cosmic::Action<Message>> {
+        let State::Ready { editor, .. } = &mut self.state else {
+            return Task::none();
+        };
+
+        if editor.ignore_next_external_change {
+            editor.ignore_next_external_change = false;
+            return Task::none();
+        }
+
+        let currently_open = editor.path.as_ref() == Some(&path);
+        if currently_open && !self.external_change_dialog_shown() {
+            let State::Ready { editor, .. } = &mut self.state else {
+                return Task::none();
+            };
+            // dirty so "keep my version" recreates the file from the editor text
+            editor.is_dirty = true;
+            editor.history.saved_index = None;
+            self.rewatch_after_save = true;
+            self.dialog_pages
+                .push_back(crate::app::dialogs::DialogPage::ExternalFileRemoved(path));
         }
 
         Task::none()

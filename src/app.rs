@@ -107,6 +107,14 @@ pub struct AppModel {
     autosave_generation: u64,
     /// The next save result comes from an autosave: don't show a toast for it
     silent_save: bool,
+    /// What to do once the save started from the "save changes?" dialog finishes
+    pending_after_save: Option<DiscardChangesAction>,
+    /// Window title currently applied, so it is only set again when it changes
+    window_title: String,
+    /// Bumped to restart the file watcher (its inotify watch dies with the file)
+    watch_generation: u64,
+    /// The open note was deleted on disk: watch it again once it is written back
+    rewatch_after_save: bool,
     /// Line to jump to after the next file is opened (vault search results)
     pending_jump_line: Option<usize>,
     /// State of the "search in vault" context page
@@ -145,6 +153,8 @@ enum PaneContent {
 pub enum DiscardChangesAction {
     CloseApp,
     OpenFile(PathBuf),
+    /// Forget a note that was deleted on disk and start a new empty one
+    CloseFile(PathBuf),
 }
 
 /// Clipboard operations on the text editor
@@ -204,6 +214,8 @@ pub enum Message {
     DiscardChanges(DiscardChangesAction),
     /// Fired when the watcher detects an external change to the open file
     ExternalFileChanged(PathBuf),
+    /// The open file was deleted or moved away by another program
+    ExternalFileRemoved(PathBuf),
     /// Autosave timer fired (generation of the timer)
     AutosaveTick(u64),
 
@@ -272,6 +284,8 @@ pub enum Message {
     ExportHtml,
     /// Copy the current document as HTML
     CopyHtml,
+    /// Save the open file, then close the app or open another file
+    SaveThenContinue(DiscardChangesAction),
     /// Callback after using asks to close the app
     AppCloseRequested,
     /// Something happened on the tray icon
@@ -392,6 +406,10 @@ impl cosmic::Application for AppModel {
             zen_restore_nav: true,
             autosave_generation: 0,
             silent_save: false,
+            pending_after_save: None,
+            window_title: String::new(),
+            watch_generation: 0,
+            rewatch_after_save: false,
             pending_jump_line: None,
             vault_search: VaultSearchState::default(),
             clipboard,
@@ -819,7 +837,7 @@ impl cosmic::Application for AppModel {
                 Message::ConfigInput(ConfigInput::SystemThemeModeChange)
             }),
             // Watch for external file changes
-            file_watch_subscription(watched_path),
+            file_watch_subscription(watched_path, self.watch_generation),
             // Tray icon on the panel
             crate::tray::subscription().map(Message::Tray),
         ];
@@ -833,7 +851,7 @@ impl cosmic::Application for AppModel {
 
     /// Handles messages emitted by the application and its widgets.
     fn update(&mut self, message: Self::Message) -> Task<cosmic::Action<Self::Message>> {
-        match message {
+        let task = match message {
             // UI
             Message::CloseToast(id) => self.handle_close_toast(id),
             Message::AddToast(toast) => self.handle_add_toast(toast),
@@ -858,10 +876,12 @@ impl cosmic::Application for AppModel {
             Message::NewVaultFile(name) => self.handle_new_vault_file(name),
             Message::NewVaultFolder(name) => self.handle_new_vault_folder(name),
             Message::SaveFile => self.handle_save_file(),
+            Message::SaveThenContinue(action) => self.handle_save_then_continue(action),
             Message::OpenFile(result) => self.handle_open_file(result),
             Message::FileSaved(result) => self.handle_file_saved(result),
             Message::DiscardChanges(action) => self.handle_discard_changes(action),
             Message::ExternalFileChanged(path) => self.handle_external_file_changed(path),
+            Message::ExternalFileRemoved(path) => self.handle_external_file_removed(path),
             Message::AutosaveTick(generation) => self.handle_autosave_tick(generation),
 
             // Vault / Node
@@ -905,16 +925,40 @@ impl cosmic::Application for AppModel {
             Message::CopyHtml => self.handle_copy_html(),
             Message::AppCloseRequested => self.handle_app_close_requested(),
             Message::Tray(event) => self.handle_tray(event),
-        }
+        };
+
+        // the open note or its dirty state may have changed
+        Task::batch([task, self.update_title()])
     }
 }
 
 impl AppModel {
-    /// Updates the header and window titles.
+    /// Updates the window title ("• note.md - Postilla") when the open note or
+    /// its unsaved state changed since the last call.
     pub fn update_title(&mut self) -> Task<cosmic::Action<Message>> {
-        let window_title = String::from("Postilla");
+        let window_title = match &self.state {
+            State::Ready { editor, .. } => {
+                let name = editor
+                    .path
+                    .as_deref()
+                    .and_then(Path::file_name)
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| fl!("new-file"));
+                // an empty new file has nothing to lose, don't flag it
+                let unsaved = editor.is_dirty
+                    && (editor.path.is_some() || !editor.content.text().trim().is_empty());
+                let marker = if unsaved { "• " } else { "" };
+                format!("{marker}{name} - Postilla")
+            }
+            State::Loading => String::from("Postilla"),
+        };
+
+        if window_title == self.window_title {
+            return Task::none();
+        }
 
         if let Some(id) = self.core.main_window_id() {
+            self.window_title = window_title.clone();
             self.set_window_title(window_title, id)
         } else {
             Task::none()
@@ -1680,7 +1724,7 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
                     let relative = path
                         .trim_start_matches(&*app_config.vault_path)
                         .trim_start_matches('/');
-                    text(format!("Vault/{relative}")).size(12)
+                    text(format!("{}/{relative}", fl!("vault"))).size(12)
                 } else {
                     text(path).size(12)
                 }
@@ -1732,49 +1776,109 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
     };
 
     let helper_header_bar = {
-        let format_button = |icon: &'static str, action: utils::SelectionAction| {
-            button::icon(icons::get_handle(icon, 18)).on_press(Message::ApplyFormatting(action))
+        // every button gets a tooltip with its name and shortcut, if it has one
+        let tip = |icon: &'static str, message: Message, label: String| {
+            tooltip(
+                button::icon(icons::get_handle(icon, 18)).on_press(message),
+                container(text(label))
+                    .class(cosmic::theme::Container::Background)
+                    .padding(8.),
+                tooltip::Position::Bottom,
+            )
         };
+        let format_button = |icon: &'static str, action: utils::SelectionAction, label: String| {
+            tip(icon, Message::ApplyFormatting(action), label)
+        };
+        let with_key = |label: String, key: &str| format!("{label} · {key}");
 
         container(
             row![
-                format_button("helperbar/bold-symbolic", utils::SelectionAction::Bold),
-                format_button("helperbar/italic-symbolic", utils::SelectionAction::Italic),
+                format_button(
+                    "helperbar/bold-symbolic",
+                    utils::SelectionAction::Bold,
+                    with_key(fl!("bold"), "Ctrl+B")
+                ),
+                format_button(
+                    "helperbar/italic-symbolic",
+                    utils::SelectionAction::Italic,
+                    with_key(fl!("italic"), "Ctrl+I")
+                ),
                 format_button(
                     "helperbar/strikethrough-symbolic",
-                    utils::SelectionAction::Strikethrough
+                    utils::SelectionAction::Strikethrough,
+                    with_key(fl!("strikethrough"), "Ctrl+Shift+X")
                 ),
                 horizontal().width(18.),
-                format_button("helperbar/link-symbolic", utils::SelectionAction::Hyperlink),
-                format_button("helperbar/code-symbolic", utils::SelectionAction::Code),
-                format_button("helperbar/math-symbolic", utils::SelectionAction::Math),
-                format_button("helperbar/image-symbolic", utils::SelectionAction::Image),
+                format_button(
+                    "helperbar/link-symbolic",
+                    utils::SelectionAction::Hyperlink,
+                    with_key(fl!("link"), "Ctrl+K")
+                ),
+                format_button(
+                    "helperbar/code-symbolic",
+                    utils::SelectionAction::Code,
+                    with_key(fl!("code"), "Ctrl+Shift+K")
+                ),
+                format_button("helperbar/math-symbolic", utils::SelectionAction::Math, fl!("math")),
+                format_button(
+                    "helperbar/image-symbolic",
+                    utils::SelectionAction::Image,
+                    fl!("image")
+                ),
                 horizontal().width(18.),
                 format_button(
                     "helperbar/bulleted-list-symbolic",
-                    utils::SelectionAction::BulletedList
+                    utils::SelectionAction::BulletedList,
+                    fl!("bullet-list")
                 ),
                 format_button(
                     "helperbar/numbered-list-symbolic",
-                    utils::SelectionAction::NumberedList
+                    utils::SelectionAction::NumberedList,
+                    fl!("numbered-list")
                 ),
                 format_button(
                     "helperbar/checked-list-symbolic",
-                    utils::SelectionAction::CheckboxList
+                    utils::SelectionAction::CheckboxList,
+                    fl!("checkbox")
                 ),
-                format_button("helperbar/heading-symbolic", utils::SelectionAction::Heading1),
-                format_button("helperbar/quote-symbolic", utils::SelectionAction::Blockquote),
-                format_button("helperbar/table-symbolic", utils::SelectionAction::Table),
-                format_button("helperbar/rule-symbolic", utils::SelectionAction::Rule),
+                format_button(
+                    "helperbar/heading-symbolic",
+                    utils::SelectionAction::Heading1,
+                    fl!("heading")
+                ),
+                format_button(
+                    "helperbar/quote-symbolic",
+                    utils::SelectionAction::Blockquote,
+                    with_key(fl!("quote"), "Ctrl+Shift+Q")
+                ),
+                format_button(
+                    "helperbar/table-symbolic",
+                    utils::SelectionAction::Table,
+                    fl!("table")
+                ),
+                format_button(
+                    "helperbar/rule-symbolic",
+                    utils::SelectionAction::Rule,
+                    fl!("horizontal-rule")
+                ),
                 horizontal().width(18.),
-                format_button("helperbar/datetime-symbolic", utils::SelectionAction::DateTime),
+                format_button(
+                    "helperbar/datetime-symbolic",
+                    utils::SelectionAction::DateTime,
+                    with_key(fl!("insert-datetime"), "Ctrl+Shift+D")
+                ),
                 horizontal(),
-                button::icon(icons::get_handle("outline-symbolic", 18))
-                    .on_press(Message::ToggleContextPage(ContextPage::Outline)),
-                button::icon(icons::get_handle("search-vault-symbolic", 18))
-                    .on_press(Message::ToggleContextPage(ContextPage::VaultSearch)),
-                button::icon(icons::get_handle("helperbar/pdf-symbolic", 18))
-                    .on_press(Message::ExportPDF)
+                tip(
+                    "outline-symbolic",
+                    Message::ToggleContextPage(ContextPage::Outline),
+                    with_key(fl!("outline"), "Ctrl+Shift+O")
+                ),
+                tip(
+                    "search-vault-symbolic",
+                    Message::ToggleContextPage(ContextPage::VaultSearch),
+                    with_key(fl!("search-vault"), "Ctrl+Shift+F")
+                ),
+                tip("helperbar/pdf-symbolic", Message::ExportPDF, fl!("export-pdf"))
             ]
             .padding(spacing.space_xxs)
             .spacing(spacing.space_xxs),
@@ -1866,8 +1970,10 @@ fn postilla_main_view<'a>(params: MainViewParams<'a>) -> Element<'a, Message> {
     }
 }
 
-// Watches for external changes on the currently open file
-fn file_watch_subscription(path: Option<PathBuf>) -> Subscription<Message> {
+// Watches for external changes on the currently open file. The generation is
+// part of the subscription identity: bumping it recreates the watcher, which is
+// needed after the file was replaced or deleted (the inotify watch dies with it).
+fn file_watch_subscription(path: Option<PathBuf>, generation: u64) -> Subscription<Message> {
     use cosmic::iced::futures::SinkExt;
     use cosmic::iced::futures::channel::mpsc as iced_mpsc;
     use notify::{EventKind, RecursiveMode, Watcher, recommended_watcher};
@@ -1876,7 +1982,7 @@ fn file_watch_subscription(path: Option<PathBuf>) -> Subscription<Message> {
         return Subscription::none();
     };
 
-    Subscription::run_with(path, |path| {
+    Subscription::run_with((path, generation), |(path, _)| {
         let path_owned = path.clone();
 
         cosmic::iced::stream::channel(
@@ -1887,8 +1993,10 @@ fn file_watch_subscription(path: Option<PathBuf>) -> Subscription<Message> {
                 let mut watcher =
                     match recommended_watcher(move |res: notify::Result<notify::Event>| {
                         if let Ok(event) = res {
-                            let is_relevant =
-                                matches!(event.kind, EventKind::Modify(_) | EventKind::Create(_));
+                            let is_relevant = matches!(
+                                event.kind,
+                                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
+                            );
                             if is_relevant {
                                 for p in event.paths {
                                     let _ = tx.send(p);
@@ -1918,12 +2026,17 @@ fn file_watch_subscription(path: Option<PathBuf>) -> Subscription<Message> {
                     };
 
                     if changed_path == path_owned {
-                        let _ = output
-                            .send(Message::ExternalFileChanged(changed_path.clone()))
-                            .await;
-
+                        // many editors save as delete + rename: let the burst settle
+                        // before deciding whether the file changed or went away
                         tokio::time::sleep(std::time::Duration::from_millis(300)).await;
                         while rx.try_recv().is_ok() {}
+
+                        let message = if path_owned.exists() {
+                            Message::ExternalFileChanged(changed_path)
+                        } else {
+                            Message::ExternalFileRemoved(changed_path)
+                        };
+                        let _ = output.send(message).await;
                     }
                 }
             },

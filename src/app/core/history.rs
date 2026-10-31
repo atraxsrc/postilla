@@ -8,6 +8,8 @@ pub struct HistoryState {
     pub history_index: usize,
     pub cursor_before: Vec<(usize, usize)>, // cursor before patch[i] was applied
     pub cursor_after: Vec<(usize, usize)>,  // cursor after patch[i] was applied
+    /// `history_index` at the last save, `None` if that state is no longer reachable
+    pub saved_index: Option<usize>,
 }
 
 impl HistoryState {
@@ -18,7 +20,18 @@ impl HistoryState {
             history_index: 0,
             cursor_before: Vec::new(),
             cursor_after: Vec::new(),
+            saved_index: Some(0),
         }
+    }
+
+    /// Remembers the current position as the one written to disk
+    pub fn mark_saved(&mut self) {
+        self.saved_index = Some(self.history_index);
+    }
+
+    /// Whether the text currently shown is the one written to disk
+    pub fn is_at_saved_state(&self) -> bool {
+        self.saved_index == Some(self.history_index)
     }
 }
 
@@ -50,4 +63,35 @@ pub fn apply_single(text: &str, patch: &[Chunk<'static>]) -> String {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn opened_content_starts_at_the_saved_state() {
+        let history = HistoryState::new_with_content("hello".into());
+        assert!(history.is_at_saved_state());
+    }
+
+    #[test]
+    fn a_never_saved_history_has_no_saved_state() {
+        let history = HistoryState::default();
+        assert!(!history.is_at_saved_state());
+    }
+
+    #[test]
+    fn mark_saved_follows_the_current_index() {
+        let mut history = HistoryState::new_with_content("hello".into());
+        history.history_patches.push(make_patch("hello", "hello world"));
+        history.history_index = 1;
+        assert!(!history.is_at_saved_state());
+
+        history.mark_saved();
+        assert!(history.is_at_saved_state());
+
+        history.history_index = 0;
+        assert!(!history.is_at_saved_state());
+    }
 }

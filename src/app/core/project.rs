@@ -31,7 +31,7 @@ impl AppModel {
                 .nav_model
                 .insert()
                 .icon(node.icon(18))
-                .text("Vault")
+                .text(crate::fl!("vault"))
                 .data(node)
                 .id();
 
@@ -394,7 +394,7 @@ impl AppModel {
                         None
                     }
                 })
-                .unwrap_or("Vault".to_string()),
+                .unwrap_or_else(|| crate::fl!("vault")),
             0u16,
         ));
 

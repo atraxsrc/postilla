@@ -4,7 +4,7 @@ use anywho::anywho;
 use cosmic::dialog::{ashpd::desktop::file_chooser::SelectedFiles, file_chooser::FileFilter};
 use std::{path::PathBuf, sync::Arc};
 
-use crate::file_types;
+use crate::{file_types, fl};
 
 pub async fn load_file(path: PathBuf) -> Result<(PathBuf, Arc<String>), anywho::Error> {
     let decoded = percent_encoding::percent_decode_str(path.to_str().unwrap_or_default())
@@ -134,9 +134,11 @@ async fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<(), anywho::
 
 /// Open a system dialog to select a supported file, returns the selected file (if any)
 pub async fn open_markdown_file_picker(vault_path: String) -> Option<String> {
+    let title = fl!("open-file");
+    let accept = fl!("open");
     let result = SelectedFiles::open_file()
-        .title("Open File")
-        .accept_label("Open")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
         .multiple(false)
         .current_folder(vault_path)
@@ -162,9 +164,11 @@ pub async fn open_markdown_file_picker(vault_path: String) -> Option<String> {
 
 /// Open a system dialog to select where to save a markdown file, returns the selected file (if any)
 pub async fn open_markdown_file_saver(vault_path: String) -> Option<String> {
+    let title = fl!("save-file");
+    let accept = fl!("save");
     let result = SelectedFiles::save_file()
-        .title("Save File")
-        .accept_label("Save")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
         .current_folder(vault_path)
         .unwrap_or_default()
@@ -189,11 +193,13 @@ pub async fn open_markdown_file_saver(vault_path: String) -> Option<String> {
 
 /// Open a system dialog to select where to save a PDF file, returns the selected file (if any)
 pub async fn open_pdf_file_saver(suggested_name: Option<String>) -> Option<String> {
+    let title = fl!("export-pdf-dialog");
+    let accept = fl!("export");
     let mut request = SelectedFiles::save_file()
-        .title("Export PDF")
-        .accept_label("Export")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
-        .filter(FileFilter::new("PDF Files").glob("*.pdf"));
+        .filter(FileFilter::new(&fl!("pdf-files")).glob("*.pdf"));
 
     if let Some(name) = suggested_name {
         request = request.current_name(Some(name.as_str()));
@@ -216,9 +222,11 @@ pub async fn open_pdf_file_saver(suggested_name: Option<String>) -> Option<Strin
 
 /// Open a system dialog to select a folder
 pub async fn open_folder_picker(vault_path: String) -> Option<String> {
+    let title = fl!("pick-folder");
+    let accept = fl!("pick");
     let result = SelectedFiles::open_file()
-        .title("Pick Folder")
-        .accept_label("Pick")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
         .directory(true)
         .current_folder(vault_path)
@@ -247,11 +255,13 @@ pub async fn open_folder_picker(vault_path: String) -> Option<String> {
 
 /// Open a system dialog to select where to save an HTML file, returns the selected file (if any)
 pub async fn open_html_file_saver(suggested_name: Option<String>) -> Option<String> {
+    let title = fl!("export-html-dialog");
+    let accept = fl!("export");
     let mut request = SelectedFiles::save_file()
-        .title("Export HTML")
-        .accept_label("Export")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
-        .filter(FileFilter::new("HTML Files").glob("*.html").glob("*.htm"));
+        .filter(FileFilter::new(&fl!("html-files")).glob("*.html").glob("*.htm"));
 
     if let Some(name) = suggested_name {
         request = request.current_name(Some(name.as_str()));
@@ -278,13 +288,15 @@ pub async fn open_html_file_saver(suggested_name: Option<String>) -> Option<Stri
 
 /// Open a system dialog to select a syntax theme file (RON or tmTheme)
 pub async fn open_theme_file_picker() -> Option<PathBuf> {
+    let title = fl!("import-syntax-theme");
+    let accept = fl!("import");
     let result = SelectedFiles::open_file()
-        .title("Import Syntax Theme")
-        .accept_label("Import")
+        .title(title.as_str())
+        .accept_label(accept.as_str())
         .modal(true)
         .multiple(false)
         .filter(
-            FileFilter::new("Syntax Themes")
+            FileFilter::new(&fl!("syntax-theme-files"))
                 .glob("*.ron")
                 .glob("*.tmTheme")
                 .glob("*.tmtheme"),

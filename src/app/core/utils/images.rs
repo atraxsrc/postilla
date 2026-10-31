@@ -120,8 +120,11 @@ pub fn save_image_buffer(
 }
 
 /// Reads an image from the system clipboard, saves it as an image file in `target_dir`,
-/// and returns the relative file name.
-pub fn save_clipboard_image(target_dir: &std::path::Path) -> Result<String, anywho::Error> {
+/// and returns the relative file name. `Ok(None)` means the clipboard holds no image,
+/// `Err` that there was one but it could not be saved.
+pub fn save_clipboard_image(
+    target_dir: &std::path::Path,
+) -> Result<Option<String>, anywho::Error> {
     let mut clipboard = arboard::Clipboard::new()
         .map_err(|e| anywho::anywho!("Failed to access clipboard: {e}"))?;
 
@@ -133,7 +136,7 @@ pub fn save_clipboard_image(target_dir: &std::path::Path) -> Result<String, anyw
             img_data.height as u32,
             img_data.bytes.into_owned(),
         ) {
-            return save_image_buffer(target_dir, &img);
+            return save_image_buffer(target_dir, &img).map(Some);
         }
     }
 
@@ -141,11 +144,11 @@ pub fn save_clipboard_image(target_dir: &std::path::Path) -> Result<String, anyw
     #[allow(clippy::collapsible_if)]
     if let Ok(text) = clipboard.get_text() {
         if let Some(file_name) = copy_image_from_text_path(target_dir, &text)? {
-            return Ok(file_name);
+            return Ok(Some(file_name));
         }
     }
 
-    Err(anywho::anywho!("No image found in clipboard"))
+    Ok(None)
 }
 
 /// Checks if the given text contains a local image file path, file:// URI, or web image URL,

@@ -69,7 +69,7 @@ pub fn preview_source<'a>(path: Option<&Path>, text: &'a str) -> Cow<'a, str> {
 
 /// File chooser filter for every supported type
 pub fn file_filter() -> FileFilter {
-    all_extensions().fold(FileFilter::new("Notes and Text Files"), |filter, ext| {
+    all_extensions().fold(FileFilter::new(&crate::fl!("notes-and-text-files")), |filter, ext| {
         filter
             .glob(&format!("*.{ext}"))
             .glob(&format!("*.{}", ext.to_ascii_uppercase()))

@@ -63,7 +63,14 @@ impl EditorState {
         );
         let patch = super::history::make_patch(&prev_text, &current_text);
 
-        // discard any redo patches above current index
+        // discard any redo patches above current index, the saved state goes with them
+        if self
+            .history
+            .saved_index
+            .is_some_and(|saved| saved > self.history.history_index)
+        {
+            self.history.saved_index = None;
+        }
         self.history
             .history_patches
             .truncate(self.history.history_index);
@@ -92,6 +99,8 @@ impl EditorState {
             self.history.cursor_before.remove(0);
             self.history.cursor_after.remove(0);
             self.history.history_index = self.history.history_patches.len();
+            // the saved state moves down with the base, or falls off the end
+            self.history.saved_index = self.history.saved_index.and_then(|i| i.checked_sub(1));
         }
     }
 
@@ -113,8 +122,7 @@ impl EditorState {
             self.content.replace_text(&snapshot);
             preview.update_content(self.path.as_deref(), &snapshot);
 
-            self.is_dirty =
-                self.history.history_index != 0 || !self.history.history_base.trim().is_empty();
+            self.is_dirty = !self.history.is_at_saved_state();
 
             self.restore_cursor(line, col);
         }
@@ -137,6 +145,8 @@ impl EditorState {
 
             self.content.replace_text(&snapshot);
             preview.update_content(self.path.as_deref(), &snapshot);
+
+            self.is_dirty = !self.history.is_at_saved_state();
 
             self.restore_cursor(line, col);
         }

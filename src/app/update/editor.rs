@@ -195,7 +195,7 @@ impl AppModel {
         };
 
         match utils::images::save_clipboard_image(&target_dir) {
-            Ok(file_name) => {
+            Ok(Some(file_name)) => {
                 let cursor_before = editor.content.cursor().position;
                 let selection = editor.content.selection().unwrap_or_default();
                 let alt = if selection.is_empty() { "" } else { &selection };
@@ -224,12 +224,13 @@ impl AppModel {
 
                 Task::batch([download.chain(cursor_task), autosave])
             }
-            Err(err) => {
-                eprintln!("Failed to paste image: {err}");
-                self.handle_add_toast(utils::PostillaToast::new(crate::fl!(
-                    "no-image-clipboard"
-                )))
-            }
+            Ok(None) => self.handle_add_toast(utils::PostillaToast::new(crate::fl!(
+                "no-image-clipboard"
+            ))),
+            Err(err) => self.handle_add_toast(utils::PostillaToast::new(crate::fl!(
+                "image-paste-failed",
+                error = err.to_string()
+            ))),
         }
     }
 
@@ -250,7 +251,17 @@ impl AppModel {
         };
 
         // Try pasting as an image first
-        if let Ok(file_name) = utils::images::save_clipboard_image(&target_dir) {
+        let image = match utils::images::save_clipboard_image(&target_dir) {
+            Ok(image) => image,
+            // there was an image but it could not be saved: say so instead of pasting nothing
+            Err(err) => {
+                return self.handle_add_toast(utils::PostillaToast::new(crate::fl!(
+                    "image-paste-failed",
+                    error = err.to_string()
+                )));
+            }
+        };
+        if let Some(file_name) = image {
             let cursor_before = editor.content.cursor().position;
             let selection = editor.content.selection().unwrap_or_default();
             let alt = if selection.is_empty() { "" } else { &selection };

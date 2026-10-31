@@ -26,6 +26,8 @@ pub enum DialogPage {
     ConfirmCloseFile(DiscardChangesAction),
     /// Open file was modified externally
     ExternalFileModified(PathBuf),
+    /// Open file was deleted or moved away externally
+    ExternalFileRemoved(PathBuf),
 }
 
 impl DialogPage {
@@ -221,6 +223,33 @@ impl DialogPage {
                         .spacing(spacing.space_xxs),
                     )
             }
+            DialogPage::ExternalFileRemoved(path) => {
+                let file_name = path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("this file");
+
+                widget::dialog()
+                    .title(fl!("file-deleted-externally"))
+                    .primary_action(
+                        widget::button::suggested(fl!("keep-my-version"))
+                            .on_press(Message::DialogAction(DialogAction::KeepMyFile)),
+                    )
+                    .secondary_action(
+                        widget::button::destructive(fl!("close-file")).on_press(
+                            Message::DialogAction(DialogAction::DiscardChanges(
+                                DiscardChangesAction::CloseFile(path.clone()),
+                            )),
+                        ),
+                    )
+                    .control(
+                        widget::column::with_children(vec![
+                            widget::text::body(format!("\"{file_name}\" {}", fl!("deleted-text")))
+                                .into(),
+                        ])
+                        .spacing(spacing.space_xxs),
+                    )
+            }
         };
 
         Some(dialog.into())
@@ -308,19 +337,19 @@ impl DialogAction {
                             )));
                         }
                         DialogPage::MoveNode(_, None) => {}
-                        DialogPage::ConfirmCloseFile(action) => match action {
-                            DiscardChangesAction::CloseApp => {
-                                return Task::done(cosmic::action::app(Message::SaveFile));
-                            }
-                            DiscardChangesAction::OpenFile(_file_path) => {
-                                return Task::done(cosmic::action::app(Message::SaveFile));
-                            }
-                        },
+                        DialogPage::ConfirmCloseFile(action) => {
+                            return Task::done(cosmic::action::app(Message::SaveThenContinue(
+                                action,
+                            )));
+                        }
 
                         DialogPage::ExternalFileModified(path) => {
                             return Task::done(cosmic::action::app(Message::DiscardChanges(
                                 DiscardChangesAction::OpenFile(path.clone()),
                             )));
+                        }
+                        DialogPage::ExternalFileRemoved(_) => {
+                            return Task::done(cosmic::action::app(Message::SaveFile));
                         }
                     }
                 }

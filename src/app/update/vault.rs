@@ -38,9 +38,9 @@ impl AppModel {
 
         self.remove_nav_node(&path);
 
-        // if the deleted file was currently open, create a new empty file
+        // the open note was deleted, or lived inside the deleted folder
         if let State::Ready { editor, .. } = &self.state
-            && editor.path.as_deref() == Some(&path)
+            && editor.path.as_deref().is_some_and(|p| p.starts_with(&path))
         {
             return self.handle_new_file();
         }
@@ -172,10 +172,16 @@ impl AppModel {
             self.open_vault_folder(&vault_path);
         }
 
+        // keep the editor pointing at the open note if it moved, alone or inside a folder
         if let State::Ready { editor, .. } = &mut self.state
-            && editor.path.as_deref() == Some(&source_path)
+            && let Some(current) = editor.path.as_deref()
+            && let Ok(suffix) = current.strip_prefix(&source_path)
         {
-            editor.path = Some(dest);
+            editor.path = Some(if suffix.as_os_str().is_empty() {
+                dest
+            } else {
+                dest.join(suffix)
+            });
         }
 
         Task::none()
@@ -233,13 +239,14 @@ impl AppModel {
         match result {
             Ok(new_path) => {
                 // update the vault path in the config
+                let mut save_error = None;
                 #[allow(clippy::collapsible_if)]
                 if let Some(handler) = &self.config_handler {
                     if let Err(err) = self
                         .config
                         .set_vault_path(handler, new_path.to_string_lossy().to_string())
                     {
-                        eprintln!("{err}");
+                        save_error = Some(err.to_string());
                         // even if it fails we update the config (it won't get saved after restart)
                         let mut old_config = self.config.clone();
                         old_config.vault_path = new_path.to_string_lossy().to_string();
@@ -254,7 +261,15 @@ impl AppModel {
                 // load vault
                 self.open_vault_folder(self.config.vault_path());
 
-                Task::done(cosmic::action::app(Message::NewFile))
+                let warn = match save_error {
+                    Some(error) => self.handle_add_toast(PostillaToast::new(crate::fl!(
+                        "settings-save-failed",
+                        error = error
+                    ))),
+                    None => Task::none(),
+                };
+
+                Task::batch([warn, Task::done(cosmic::action::app(Message::NewFile))])
             }
             Err(e) => self.handle_add_toast(PostillaToast::new(e)),
         }

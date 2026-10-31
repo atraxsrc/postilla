@@ -24,12 +24,17 @@ impl AppModel {
     {
         if let Some(handler) = &self.config_handler {
             if let Err(err) = updater(&mut self.config, Some(handler)) {
-                eprintln!("{err}");
+                return self.settings_save_failed(err);
             }
         } else {
             let _ = updater(&mut self.config, None);
         }
         Task::none()
+    }
+
+    /// Toast for a setting that was applied but could not be written to disk
+    fn settings_save_failed(&mut self, error: String) -> Task<cosmic::Action<Message>> {
+        self.handle_add_toast(PostillaToast::new(fl!("settings-save-failed", error = error)))
     }
 
     /// Builds the application theme from the configuration (app theme, frosted
@@ -163,20 +168,21 @@ impl AppModel {
                     _ => AppTheme::System,
                 };
 
+                let mut saved = Task::none();
                 if let Some(handler) = &self.config_handler {
                     if let Err(err) = self.config.set_app_theme(handler, app_theme) {
-                        eprintln!("{err}");
                         self.config.app_theme = app_theme;
+                        saved = self.settings_save_failed(err.to_string());
                     }
                 } else {
                     self.config.app_theme = app_theme;
                 }
 
-                self.apply_theme()
+                Task::batch([saved, self.apply_theme()])
             }
             ConfigInput::FrostedGlass(index) => {
                 let mode = FrostedGlass::from_index(index);
-                let _ = self.apply_config(move |config, handler| {
+                let saved = self.apply_config(move |config, handler| {
                     if let Some(h) = handler {
                         config.set_frosted_glass(h, mode).map_err(|e| e.to_string())?;
                     } else {
@@ -184,11 +190,11 @@ impl AppModel {
                     }
                     Ok(())
                 });
-                self.apply_theme()
+                Task::batch([saved, self.apply_theme()])
             }
             ConfigInput::WindowOpacity(value) => {
                 let value = value.clamp(MIN_WINDOW_OPACITY, 100);
-                let _ = self.apply_config(move |config, handler| {
+                let saved = self.apply_config(move |config, handler| {
                     if let Some(h) = handler {
                         config.set_window_opacity(h, value).map_err(|e| e.to_string())?;
                     } else {
@@ -196,7 +202,7 @@ impl AppModel {
                     }
                     Ok(())
                 });
-                self.apply_theme()
+                Task::batch([saved, self.apply_theme()])
             }
             ConfigInput::WindowBackground(value) => {
                 let value = value.trim().to_string();
@@ -370,10 +376,23 @@ impl AppModel {
                 self.handle_open_in_file_explorer(&ThemeRegistry::user_dir())
             }
             ConfigInput::ReloadSyntaxThemes => {
-                self.syntax_themes.reload_user_themes();
+                let errors = self.syntax_themes.reload_user_themes();
                 self.syntax_theme_names = self.syntax_themes.names();
+                let count = self
+                    .syntax_themes
+                    .themes()
+                    .iter()
+                    .filter(|t| t.path.is_some())
+                    .count();
+
+                let reloaded = PostillaToast::new(fl!("themes-reloaded", count = count));
+                let mut tasks = vec![self.handle_add_toast(reloaded)];
+                for error in errors {
+                    tasks.push(self.handle_add_toast(PostillaToast::new(error)));
+                }
                 // the window background may follow a theme that changed on disk
-                self.apply_theme()
+                tasks.push(self.apply_theme());
+                Task::batch(tasks)
             }
             ConfigInput::UpdateFont(index) => {
                 if let Some(name) = self.system_fonts.get(index).cloned() {
