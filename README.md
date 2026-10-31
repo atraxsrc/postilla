@@ -16,7 +16,7 @@
 - **Vault** of notes with folders, rename/move, external change detection, and the ability to open any existing folder as the vault
 - **Three layouts**: editor only, editor + live preview, preview only (`Ctrl+1` / `Ctrl+2` / `Ctrl+3`, or the switcher in the header bar)
 - **Zen mode** (`F11`): hides every bar and the sidebar, leaving only your text
-- **Clipboard**: cut / copy / paste / select all from the *Edit* menu, the editor right-click menu or the usual shortcuts; `Ctrl+V` pastes images straight into the note
+- **Clipboard**: cut / copy / paste / select all from the *Edit* menu, the editor right-click menu or the usual shortcuts; `Ctrl+V` pastes images straight into the note (`Ctrl+P` only ever pastes an image)
 - **Formatting**: bold, italic, strikethrough, code, links, quotes, tables, lists, headings, rules, date & time stamps (`Format` menu, help bar, or shortcuts such as `Ctrl+B`, `Ctrl+I`, `Ctrl+K`, `Ctrl+Shift+D`)
 - **Outline** (`Ctrl+Shift+O`): jump between the headings of the document
 - **Search in vault** (`Ctrl+Shift+F`): full text (or regex) search across every note, open a result at the matching line
@@ -28,6 +28,31 @@
 - **Frosted glass** window effect with adjustable opacity and background color on COSMIC
 - **Typst** math and **Mermaid** diagrams inside code blocks
 - Opens Markdown, plain text, log, JSON, YAML and TOML files (see [Supported file types](#supported-file-types))
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+T` / `Ctrl+N` | New vault file / new folder |
+| `Ctrl+Shift+T` | New file outside the vault |
+| `Ctrl+O` / `Ctrl+S` | Open / save |
+| `Ctrl+Shift+E` | Export as HTML (PDF export lives in the *File* menu and the help bar) |
+| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |
+| `Ctrl+X` / `Ctrl+C` / `Ctrl+V` / `Ctrl+A` | Cut / copy / paste / select all |
+| `Ctrl+P` | Paste the clipboard image into the note |
+| `Ctrl+F` / `Ctrl+Shift+F` | Find in the note / search in the vault |
+| `Ctrl+B` / `Ctrl+I` / `Ctrl+Shift+X` | Bold / italic / strikethrough |
+| `Ctrl+K` / `Ctrl+Shift+K` | Link / code |
+| `Ctrl+Shift+Q` | Quote |
+| `Ctrl+Shift+D` | Insert date and time |
+| `Ctrl+1` / `Ctrl+2` / `Ctrl+3` | Editor only / editor and preview / preview only |
+| `Ctrl+H` | Toggle the preview |
+| `F11` | Zen mode |
+| `Ctrl+Shift+O` | Outline |
+| `Ctrl+,` / `Ctrl+Shift+I` | Settings / about |
+| `Esc` | Close the find box, the context drawer or the open dialog |
+
+The help bar buttons show these shortcuts in their tooltips.
 
 ## Supported file types
 
@@ -110,9 +135,9 @@ moved or copied. The Cedilla Flatpak keeps its vault in
 
 Postilla ships the usual built-in themes (Inspired GitHub, Ocean, Mocha, Eighties, Solarized...), two themes in the
 colors of the logo ([`postilla-ink.ron`](./resources/themes/postilla-ink.ron) and
-[`postilla-parchment.ron`](./resources/themes/postilla-parchment.ron), import them from *Settings → Appearance*)
-and loads any theme placed in its themes folder (*Settings → Appearance → Themes folder*, or use *Import theme…*). Three
-formats are detected automatically:
+[`postilla-parchment.ron`](./resources/themes/postilla-parchment.ron), placed in the themes folder on first start)
+and loads any theme placed in its themes folder (*Settings → Appearance → Themes folder*, then *Reload themes*, or
+use *Import theme…*). Three formats are detected automatically:
 
 | Format | File | Notes |
 | --- | --- | --- |
@@ -151,6 +176,8 @@ COSMIC with blur support; on other desktops the window simply becomes translucen
 Code blocks with the `typst` or `typ` language render as [Typst](https://typst.app/), which is handy for math
 and formulas, and blocks with `mermaid` or `mmd` render as [Mermaid](https://mermaid.js.org/intro/) diagrams
 (powered by [merman](https://github.com/Latias94/merman)). Both are also rendered in PDF and HTML exports.
+[`resources/samples/math-showcase.md`](./resources/samples/math-showcase.md) is a note full of Typst formulas to try
+the preview and the exports with.
 
 ## Acknowledgements
 

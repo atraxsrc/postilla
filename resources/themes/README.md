@@ -1,8 +1,10 @@
 # Postilla syntax highlighting themes
 
-Drop theme files into Postilla's theme folder (open it from *Settings →
-Appearance → Open themes folder*) or import them with the *Import theme*
-button. Three formats are understood:
+Drop theme files into Postilla's themes folder (open it from *Settings →
+Appearance → Themes folder*, then press *Reload themes*) or pick a file with
+the *Import theme…* button. The folder starts with these examples and with
+the two themes in the colors of the logo, `postilla-ink.ron` (dark) and
+`postilla-parchment.ron` (light). Three formats are understood:
 
 | Format | Extension | Notes |
 | --- | --- | --- |
