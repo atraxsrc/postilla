@@ -71,7 +71,7 @@ install:
 
 # Uninstalls installed files
 uninstall:
-    rm {{bin-dst}} {{desktop-dst}} {{icon-svg-dst}} {{icon-symbolic-dst}}
+    rm {{bin-dst}} {{desktop-dst}} {{appdata-dst}} {{icon-svg-dst}} {{icon-symbolic-dst}}
 
 # Builds a Debian package in target/debian (needs `cargo install cargo-deb` and `dpkg-dev`)
 # Local build paths are remapped so the binary does not embed the builder's home directory

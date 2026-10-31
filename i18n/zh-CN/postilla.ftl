@@ -12,7 +12,6 @@ name = 名称
 <#-- About Page -->
 repository = 仓库
 support = 支持
-donations = 捐赠
 
 <#-- Main App -->
 editor = 编辑器
@@ -50,8 +49,6 @@ last-file = 应用启动时打开上次编辑的文件
 yes = 是
 no = 否
 scrollbar-sync = 编辑器和预览保持同步滚动
-pdf-exporting = PDF 文件导出
-gotenberg-url = 设置 Gotenberg 服务器 URL
 apply = 应用
 more-info = 更多信息
 text-size = 字号

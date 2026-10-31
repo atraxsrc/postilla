@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Postilla
-Comment=A markdown text editor
-Comment[cs]=Editor textu Markdown
+Comment=Markdown notes for the COSMIC desktop
+Comment[cs]=Poznámky v Markdownu pro desktop COSMIC
 Type=Application
 Icon=io.github.atraxsrc.Postilla
 Exec=postilla %F
@@ -10,4 +10,4 @@ StartupNotify=true
 Categories=COSMIC;Utility;TextTools;Office;TextEditor;
 Keywords=COSMIC;Markdown;MD;Editor;Text;Writing;Notes;Documentation;Markup;Preview;
 Keywords[cs]=COSMIC;Markdown;MD;Editor;Text;Psaní;Poznámky;Dokumentace;Markup;Náhled;
-MimeType=text/markdown;text/x-markdown;text/plain;application/json;application/yaml;application/x-yaml;application/toml;
+MimeType=text/markdown;text/x-markdown;text/plain;text/x-log;application/json;application/yaml;application/x-yaml;application/toml;

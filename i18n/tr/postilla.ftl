@@ -12,7 +12,6 @@ name = Ad
 <#-- About Page -->
 repository = Depo 
 support = Destek 
-donations = Bağış Yap 
 
 <#-- Main App -->
 editor = Düzenleyici 
@@ -50,8 +49,6 @@ last-file = Uygulama başladığında son dosyayı aç
 yes = Evet 
 no = Hayır 
 scrollbar-sync = Önizleme ve Düzenleyici kaydırma çubuklarını eşitle 
-pdf-exporting = PDF Dışa Aktarımı 
-gotenberg-url = Gotenberg sunucu adresini ayarla 
 apply = Uygula 
 more-info = Daha Fazla Bilgi 
 text-size = Metin Boyutu 

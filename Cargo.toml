@@ -37,6 +37,8 @@ assets = [
     ["resources/themes/README.md", "usr/share/doc/postilla/themes/README.md", "644"],
     ["resources/themes/example-postilla-theme.ron", "usr/share/doc/postilla/themes/example-postilla-theme.ron", "644"],
     ["resources/themes/example-cosmic-term.ron", "usr/share/doc/postilla/themes/example-cosmic-term.ron", "644"],
+    ["resources/themes/postilla-ink.ron", "usr/share/doc/postilla/themes/postilla-ink.ron", "644"],
+    ["resources/themes/postilla-parchment.ron", "usr/share/doc/postilla/themes/postilla-parchment.ron", "644"],
 ]
 
 [dependencies]

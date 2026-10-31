@@ -12,7 +12,6 @@ name = Назва
 <#-- About Page -->
 repository = Сховище
 support = Підтримка
-donations = Пожертвувати
 
 <#-- Main App -->
 editor = Редактор
@@ -50,8 +49,6 @@ last-file = Відкривати останній файл під час зап�
 yes = Так
 no = Ні
 scrollbar-sync = Синхронізувати прокрутку редактора і перегляду
-pdf-exporting = Експорт у PDF
-gotenberg-url = Вкажіть URL сервера Gotenberg
 apply = Застосувати
 more-info = Докладніше
 text-size = Розмір тексту

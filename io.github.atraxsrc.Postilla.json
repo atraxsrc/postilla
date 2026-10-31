@@ -41,7 +41,8 @@
         "install -Dm0755 -s ./target/release/postilla /app/bin/postilla",
         "install -Dm0644 ./resources/app.desktop /app/share/applications/io.github.atraxsrc.Postilla.desktop",
         "install -Dm0644 ./resources/app.metainfo.xml /app/share/metainfo/io.github.atraxsrc.Postilla.metainfo.xml",
-        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.atraxsrc.Postilla.svg"
+        "install -Dm0644 ./resources/icons/hicolor/scalable/apps/icon.svg /app/share/icons/hicolor/scalable/apps/io.github.atraxsrc.Postilla.svg",
+        "install -Dm0644 ./resources/icons/hicolor/symbolic/apps/icon-symbolic.svg /app/share/icons/hicolor/symbolic/apps/io.github.atraxsrc.Postilla-symbolic.svg"
       ],
       "sources": [
         {

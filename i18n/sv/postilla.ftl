@@ -12,7 +12,6 @@ name = Namn
 <#-- Om sida -->
 repository = Källkod
 support = Support
-donations = Donera
 
 <#-- Huvudprogram -->
 editor = Redigerare
@@ -50,8 +49,6 @@ last-file = Öppna den sista filen när programmet startar
 yes = Ja
 no = Nej
 scrollbar-sync = Synkronisera förhandsgranskning och redigeringsrullningslister
-pdf-exporting = PDF-export
-gotenberg-url = Ange Gotenberg-serverns URL
 apply = Verkställ
 more-info = Mer information
 text-size = Textstorlek

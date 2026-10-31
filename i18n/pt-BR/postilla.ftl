@@ -12,7 +12,6 @@ name = Nome
 <#-- About Page -->
 repository = Repositório
 support = Suporte
-donations = Doações
 
 <#-- Main App -->
 editor = Editor
@@ -46,8 +45,6 @@ last-file = Abrir o último arquivo ao iniciar o aplicativo
 yes = Sim
 no = Não
 scrollbar-sync = Sincronizar rolagem do Editor e da Pré-visualização
-pdf-exporting = Exportação de PDF
-gotenberg-url = Definir a URL do servidor Gotenberg
 apply = Aplicar
 more-info = Mais Informações
 text-size = Tamanho do Texto

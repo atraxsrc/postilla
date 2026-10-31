@@ -12,7 +12,6 @@ name = Název
 <#-- About Page -->
 repository = Repozitář
 support = Podpora
-donations = Přispět
 
 <#-- Main App -->
 editor = Editor
@@ -50,8 +49,6 @@ last-file = Otevřít poslední soubor při spuštění aplikace
 yes = Ano
 no = Ne
 scrollbar-sync = Synchronizovat posuvníky náhledu a editoru
-pdf-exporting = Export do PDF
-gotenberg-url = Nastavit URL serveru Gotenberg
 apply = Použít
 more-info = Více informací
 text-size = Velikost textu
